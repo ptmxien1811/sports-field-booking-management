@@ -11,7 +11,7 @@ bài tập lớn môn kiểm thử phàn mềm
 | 2351050209  | Phạm Thị Mỹ Xuyên  | FE, BE, QA  |
 
 ## Công nghệ 
-– Frontend: HTML5, CSS3, Bootstrap 5
+– Frontend: HTML5, CSS3
 – Backend: Flask 
 
 – Database: MySQL

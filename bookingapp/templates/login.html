@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Đăng nhập</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+</head>
+<body>
+    <!-- Header xanh -->
+    <header class="top-bar">
+        <div class="date-time">Tuesday, 24/03/2026 22:30</div>
+    </header>
+
+    <!-- Form đăng nhập -->
+    <main>
+        <section class="form-section">
+            <h2>Đăng nhập</h2>
+            <form method="POST" action="/login">
+                <label for="username">Tên đăng nhập:</label>
+                <input type="text" id="username" name="username" required>
+
+                <label for="password">Mật khẩu:</label>
+                <div class="password-wrapper">
+                    <input type="password" id="password" name="password" required>
+
+                </div>
+
+                <button type="submit">Đăng nhập</button>
+            </form>
+            <div class="extra-links">
+                <a href="/forgot-password">Quên mật khẩu?</a>
+                <a href="/register">Đăng kí</a>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer xanh -->
+    <footer class="bottom-bar">
+        <p>© 2026 Sports Booking</p>
+    </footer>
+
+    <script>
+        function togglePassword() {
+            const pwd = document.getElementById("password");
+            if (pwd.type === "password") {
+                pwd.type = "text";
+            } else {
+                pwd.type = "password";
+            }
+        }
+    </script>
+</body>
+</html>

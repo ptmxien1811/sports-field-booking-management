@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Ứng dụng đặt sân{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <!-- Thanh trên cùng -->
+    <header class="top-bar">
+        <div class="date-time">{{ current_time }}</div>
+        <div class="auth">
+            <a href="{{ url_for('login') }}"><button>Đăng nhập</button></a>
+            <a href="{{ url_for('register') }}"><button>Đăng kí</button></a>
+        </div>
+    </header>
+
+    <!-- Thanh công cụ dưới -->
+    <nav class="bottom-nav">
+        <ul>
+            <li><a href="{{ url_for('home') }}">Trang chủ</a></li>
+            <li><a href="{{ url_for('explore') }}">Khám phá</a></li>
+            <li><a href="{{ url_for('featured') }}">Nổi bật</a></li>
+            <li><a href="{{ url_for('account') }}">Tài khoản</a></li>
+        </ul>
+    </nav>
+
+    <!-- Nội dung riêng -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+</body>
+</html>

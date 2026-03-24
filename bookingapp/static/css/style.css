@@ -1,12 +1,278 @@
-* {
-    font-family: Tahoma;
-}
-
-h1.subject {
-    text-align:center;
-}
-
 body {
-    background-color: lightblue;
-    color: darkblue;
+    background-color: #e6f0ff;
+    color: #003366;
+    font-family: Tahoma, sans-serif;
+    padding-bottom: 70px;
+    margin: 0;
+}
+
+/* Thanh trên cùng */
+/* Thanh trên cùng cố định */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #004080;
+    color: white;
+    padding: 15px 30px;
+    z-index: 1000;
+}
+
+
+/* Nội dung chính cuộn trong khoảng giữa */
+main {
+    margin-top: 70px;   /* khoảng trống dưới header */
+    margin-bottom: 70px; /* khoảng trống trên bottom-nav */
+    overflow-y: auto;
+    height: calc(100vh - 140px); /* toàn bộ chiều cao trừ header + footer */
+    padding: 15px;
+}
+
+
+/* Container của nút đăng nhập/đăng kí */
+.auth {
+    display: flex;
+    gap: 10px;              /* khoảng cách giữa các nút */
+    margin-right: 60px;     /* nới vào trong, cách mép phải */
+}
+
+/* Nút đăng nhập/đăng kí */
+.auth button, .auth a {
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    cursor: pointer;
+    text-decoration: none;
+    border-radius: 8px;     /* bo tròn góc */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* bóng nhẹ */
+}
+
+.auth button:hover {
+    background-color: #004080;
+}
+
+
+/* Thanh tìm kiếm + menu tab */
+.search-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #e6f0ff;
+    padding: 10px 20px;
+    gap: 20px;
+}
+
+.search-box {
+    display: flex;
+    flex: 1;
+    border: 2px solid #0066cc;
+    border-radius: 5px;
+    position: relative;
+}
+
+.search-box input {
+    flex: 1;
+    padding: 10px;
+    border: none;
+}
+
+.filter-btn, .search-btn {
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    padding: 0 15px;
+    cursor: pointer;
+}
+
+.nav-tabs {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-tabs li a {
+    background-color: #0066cc;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.nav-tabs li a.active {
+    background-color: #004080;
+}
+
+/* Tab content */
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+.venues.tab-content.active { display: flex; flex-wrap: wrap; gap: 20px; }
+
+/* Danh sách sân */
+.venues {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 20px;
+}
+
+.venue-card {
+    background: white;
+    border: 1px solid #0066cc;
+    border-radius: 8px;
+    width: calc(33.333% - 20px);
+    padding: 1px;
+    text-align: left;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+.venue-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.venue-card h3 {
+    font-size: 16px;
+    margin: 5px 0;
+    color: #004080;
+}
+
+.venue-card p {
+    font-size: 14px;
+    margin: 3px 0;
+}
+
+/* Nút đặt lịch */
+.book-btn {
+    margin-top: 10px;
+    background-color: #004080;
+    color: white;
+    border: none;
+    padding: 8px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+}
+
+/* Nút yêu thích */
+.fav-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 20px;
+    color: #ccc;
+    cursor: pointer;
+}
+.fav-btn.active { color: #ff3366; }
+
+/* Thanh dưới cố định */
+.bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #004080;
+    padding: 20px 0;
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
+    z-index: 1000;
+}
+.bottom-nav ul {
+    list-style: none;
+    display: flex;
+    justify-content: space-around;
+    margin: 0;
+    padding: 0;
+}
+.bottom-nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+}
+.bottom-nav ul li a.active {
+    border-bottom: 2px solid #ffffff;
+}
+
+/* Suggestions */
+.suggestions {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    border: 1px solid #ccc;
+    background: white;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 1000;
+}
+.suggestions li {
+    padding: 8px;
+    cursor: pointer;
+}
+.suggestions li:hover {
+    background-color: #e6f0ff;
+}
+
+/* Form đăng nhập / đăng kí */
+.form-section {
+    max-width: 400px;
+    margin: 50px auto; /* căn giữa, cách đều hai bên */
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.form-section h2 {
+    text-align: center;
+    color: #004080;
+    margin-bottom: 20px;
+}
+
+.form-section label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #003366;
+}
+
+.form-section input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+}
+
+/* Nút trong form */
+.form-section button {
+    width: 100%;
+    padding: 10px;
+    background-color: #0066cc;
+    color: white;
+    border: none;
+    border-radius: 20px; /* bo tròn góc */
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.form-section button:hover {
+    background-color: #004080;
 }

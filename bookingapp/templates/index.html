@@ -1,11 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Trang Chủ</title>
-    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet" />
-</head>
-<body>
-    <h1 class="subject">Chào Mừng Bạn Đến Với Webstile Đặt Sân Thể Thao! </h1>
-</body>
-</html>
+{% extends "layout/base.html" %}
+
+{% block title %}Trang chủ{% endblock %}
+
+{% block content %}
+<header class="top-bar">
+    <div class="date-time">{{ current_time }}</div>
+    <div class="auth">
+        {% if username %}
+            <span>Xin chào, {{ username }}</span>
+            <a href="{{ url_for('logout') }}">Đăng xuất</a>
+        {% else %}
+            <a href="{{ url_for('login') }}">Đăng nhập</a>
+            <a href="{{ url_for('register') }}">Đăng kí</a>
+        {% endif %}
+    </div>
+</header>
+
+<section class="search-nav">
+    <!-- Thanh tìm kiếm -->
+    <div class="search-box">
+        <input type="text" id="search-input" placeholder="Tìm kiếm sân thể thao...">
+        <button class="filter-btn" id="filter-btn">🔍</button>
+        <button class="search-btn" id="search-btn">Tìm kiếm</button>
+        <ul id="suggestions" class="suggestions"></ul>
+    </div>
+
+    <!-- Thanh menu tab -->
+    <ul class="nav-tabs">
+        <li><a href="#" data-target="venues" class="active">Danh sách sân</a></li>
+        <li><a href="#" data-target="booked">Sân đã đặt</a></li>
+        <li><a href="#" data-target="favorites">Yêu thích</a></li>
+    </ul>
+</section>
+
+<!-- Nội dung các tab -->
+<section id="venues" class="venues tab-content active">
+    {% for product in products %}
+    <div class="venue-card">
+        <img src="{{ url_for('static', filename='image/' + product.image) }}" alt="{{ product.name }}">
+        <h3>{{ product.name }}</h3>
+        <p>Địa chỉ: {{ product.category.address }}</p>
+        <p>Giá: {{ product.price }}đ</p>
+        <button class="book-btn">ĐẶT LỊCH</button>
+        <span class="fav-btn">❤️</span>
+    </div>
+    {% endfor %}
+</section>
+
+<section id="booked" class="tab-content">
+    <h2>Sân đã đặt</h2>
+    <div id="booked-list"></div>
+</section>
+
+<section id="favorites" class="tab-content">
+    <h2>Sân yêu thích</h2>
+    <div id="fav-list"></div>
+</section>
+{% endblock %}

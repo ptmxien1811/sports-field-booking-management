@@ -1,0 +1,30 @@
+<footer class="main-footer">
+    <nav class="bottom-menu">
+        <ul>
+            <li>
+               <a href="{{ url_for('home') }}" class="{{ 'active' if request.endpoint == 'home' else '' }}">
+                <i class="fa-solid fa-house"></i>
+                <span>Trang chủ</span>
+               </a>
+            </li>
+            <li>
+                <a href="{{ url_for('explore') }}" class="{{ 'active' if request.endpoint == 'explore' else '' }}">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <span>Khám phá</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('featured') }}" class="{{ 'active' if request.endpoint == 'featured' else '' }}">
+                <i class="fa-solid fa-fire"></i>
+                <span>Nổi bật</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('account') }}" class="{{ 'active' if request.endpoint == 'account' else '' }}">
+                <i class="fa-solid fa-user"></i>
+                <span>Tài khoản</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</footer>

@@ -2,9 +2,46 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Khám Phá</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/explore.css') }}">
 </head>
 <body>
+    <div class="big-title">KHÁM PHÁ</div>
+    <div class="explores">
+        <ul class="nav-tabs">
+            <li><a href="#" data-target="all" class="active">Tất cả</a></li>
+            <li><a href="#" data-target="sale">Ưu đãi</a></li>
+            <li><a href="#" data-target="events">Sự kiện</a></li>
+            <li><a href="#" data-target="notice">Thông báo</a></li>
+        </ul>
 
+        <p class="line">------------------------------------------------------------------------------------------</p>
+
+        <div id="all" class="tab-content active">
+            <p><i>Chưa có ai đăng bài cả. Quay lại sau nhé! ~</i></p>
+        </div>
+
+        <div id="sale" class="tab-content">
+            <p><i>Chưa có ưu đãi! ~</i></p>
+        </div>
+
+        <div id="events" class="tab-content">
+            <p><i>Chưa có sự kiện! ~</i></p>
+        </div>
+
+        <div id="notice" class="tab-content">
+            <p><i>Chưa có thông báo! ~</i></p>
+        </div>
+    </div>
+
+    <nav class="bottom-nav">
+        <ul>
+            <li><a href="{{ url_for('home') }}">Trang chủ</a></li>
+            <li class="explore-button"><a href="{{ url_for('explore') }}">Khám phá</a></li>
+            <li><a href="{{ url_for('featured') }}">Nổi bật</a></li>
+            <li><a href="{{ url_for('account') }}">Tài khoản</a></li>
+        </ul>
+    </nav>
+    <script src="{{ url_for('static', filename='js/explore.js') }}"></script>
 </body>
 </html>

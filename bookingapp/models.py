@@ -4,64 +4,91 @@ from sqlalchemy.orm import relationship
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
+
 class BaseModel(db.Model):
     __abstract__ = True
-    id = Column(db.Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
 
+
+# ================= CATEGORY =================
 class Category(BaseModel):
     __tablename__ = 'category'
-    name = Column(db.String(50), nullable=False)
-    address = Column(db.String(50), nullable=False)
-    phone = Column(db.String(50), nullable=False)
-    product = relationship("Product", backref="category", lazy=True)
+
+    name = Column(String(50), nullable=False)
+    address = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=False)
+
+    products = relationship("Product", back_populates="category")
 
     def __str__(self):
         return self.name
 
+
+# ================= USER =================
 class User(BaseModel):
     __tablename__ = 'user'
-    username = Column(String(80), unique=True, nullable=False)
-    password = Column(String(80), nullable=False)
 
-    bookings = relationship("Booking", backref="user", lazy=True)
-    favorites = relationship("Favorite", backref="user", lazy=True)
+    username = Column(String(80), unique=True, nullable=False)
+    password = Column(String(255), nullable=False)
+
+    bookings = relationship("Booking", back_populates="user")
+    favorites = relationship("Favorite", back_populates="user")
 
     def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
+        self.password = generate_password_hash(password)
 
     def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
+        return check_password_hash(self.password, password)
 
+
+# ================= PRODUCT =================
 class Product(BaseModel):
     __tablename__ = 'products'
+
     name = Column(String(100), nullable=False)
     price = Column(Float, default=0)
     image = Column(String(100))
     active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now())
+    created_at = Column(DateTime, default=datetime.now)
+
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
 
-    bookings = relationship("Booking", backref="product", lazy=True)
-    favorites = relationship("Favorite", backref="product", lazy=True)
+    category = relationship("Category", back_populates="products")
+    bookings = relationship("Booking", back_populates="product")
+    favorites = relationship("Favorite", back_populates="product")
 
     def __str__(self):
         return self.name
 
-# Bảng Sân đã đặt
+
+# ================= BOOKING =================
 class Booking(BaseModel):
     __tablename__ = 'booking'
+
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
+
     start_time = Column(DateTime, nullable=False)
     end_time = Column(DateTime, nullable=False)
-    status = Column(String(20), default="confirmed")  # confirmed, cancelled, pending
+    status = Column(String(20), default="confirmed")
 
-# Bảng Sân yêu thích
+    user = relationship("User", back_populates="bookings")
+    product = relationship("Product", back_populates="bookings")
+
+
+# ================= FAVORITE =================
 class Favorite(BaseModel):
     __tablename__ = 'favorite'
+
     user_id = Column(Integer, ForeignKey('user.id'), nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
 
+    user = relationship("User", back_populates="favorites")
+    product = relationship("Product", back_populates="favorites")
+
+
+# ================= MAIN =================
 if __name__ == "__main__":
     with app.app_context():
+        db.drop_all()
         db.create_all()

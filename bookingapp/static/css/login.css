@@ -123,11 +123,12 @@ main {
 
 /* Liên kết thêm */
 .extra-links {
-    margin-top: 15px;
+    margin-top: 5px;
     text-align: center;
+    margin: 0 auto;
 }
 .extra-links a {
-    margin: 0 10px;
+    margin: 0 50px;
     color: #0066cc;
     text-decoration: none;
     font-weight: bold;

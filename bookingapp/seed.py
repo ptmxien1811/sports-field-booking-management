@@ -35,7 +35,25 @@ if __name__ == "__main__":
             Product(name="Sân bóng rổ ngoài trời", price=250000, image="bongro.jpg", category_id=basketball_field.id),
             Product(name="Sân bóng chuyền", price=180000, image="bongchuyen.jpg", category_id=volleyball_field.id),
             Product(name="Sân bóng bàn", price=120000, image="bongban.jpg", category_id=tabletennis_field.id),
-            Product(name="Sân pickleball hiện đại", price=200000, image="pickleball.jpg", category_id=pickleball_field.id)
+            Product(name="Sân pickleball hiện đại", price=200000, image="pickleball.jpg", category_id=pickleball_field.id),
+            Product(name="Sân bóng đá 11 người", price=800000, image="football.jpg", category_id=football_field.id),
+            Product(name="Sân tennis tiêu chuẩn", price=300000, image="tennis.jpg", category_id=tennis_field.id),
+            Product(name="Sân tennis cao cấp", price=500000, image="tennis.jpg", category_id=tennis_field.id),
+            Product(name="Hồ bơi 25m", price=200000, image="pool.jpg", category_id=swimming_pool.id),
+            Product(name="Hồ bơi Olympic 50m", price=600000, image="pool.jpg", category_id=swimming_pool.id),
+            Product(name="Sân cầu lông tiêu chuẩn", price=150000, image="caulong.jpg", category_id=badminton_field.id),
+            Product(name="Sân cầu lông đôi", price=200000, image="caulong.jpg", category_id=badminton_field.id),
+            Product(name="Sân bóng rổ ngoài trời", price=250000, image="bongro.jpg", category_id=basketball_field.id),
+            Product(name="Sân bóng rổ trong nhà", price=400000, image="bongro.jpg", category_id=basketball_field.id),
+            Product(name="Sân bóng chuyền", price=180000, image="bongchuyen.jpg", category_id=volleyball_field.id),
+            Product(name="Sân bóng chuyền bãi biển", price=300000, image="bongchuyen.jpg",
+                    category_id=volleyball_field.id),
+            Product(name="Sân bóng bàn", price=120000, image="bongban.jpg", category_id=tabletennis_field.id),
+            Product(name="Sân bóng bàn đôi", price=180000, image="bongban.jpg", category_id=tabletennis_field.id),
+            Product(name="Sân pickleball hiện đại", price=200000, image="pickleball.jpg",
+                    category_id=pickleball_field.id),
+            Product(name="Sân pickleball tiêu chuẩn", price=250000, image="pickleball.jpg",
+                    category_id=pickleball_field.id)
         ]
         db.session.add_all(products)
         db.session.commit()
@@ -46,26 +64,40 @@ if __name__ == "__main__":
             User(username="Phạm Thị Mỹ Xuyên", password="abc123"),
             User(username="Lý Đại Long", password="pass456"),
             User(username="Ngô Thị Thúy Quyên", password="pass789"),
+            User(username="Nguyễn Văn A", password="user123"),
+            User(username="Trần Thị B", password="user456"),
+            User(username="Lê Văn C", password="user789"),
+            User(username="Hoàng Thị D", password="userabc"),
+            User(username="Phạm Văn E", password="userefg"),
+            User(username="Đỗ Thị F", password="userxyz")
         ]
         db.session.add_all(users)
         db.session.commit()
 
-        # Thêm 50 booking
+        # Thêm 50 booking với dữ liệu khác nhau
         for i in range(50):
-            user_id = random.choice([u.id for u in users])
-            product_id = random.choice([p.id for p in products])
-            start_time = datetime(2026, 3, random.randint(25, 30), random.randint(6, 20), 0)
-            end_time = start_time + timedelta(hours=2)
+            user = random.choice(users)
+            product = random.choice(products)
+            start_day = random.randint(1, 28)
+            start_hour = random.randint(6, 20)
+            start_time = datetime(2026, 4, start_day, start_hour, 0)
+            end_time = start_time + timedelta(hours=random.choice([1, 2, 3]))
             status = random.choice(["confirmed", "cancelled", "pending"])
-            booking = Booking(user_id=user_id, product_id=product_id,
-                              start_time=start_time, end_time=end_time, status=status)
+
+            booking = Booking(
+                user_id=user.id,
+                product_id=product.id,
+                start_time=start_time,
+                end_time=end_time,
+                status=status
+            )
             db.session.add(booking)
 
         # Thêm 50 favorite
         for i in range(50):
-            user_id = random.choice([u.id for u in users])
-            product_id = random.choice([p.id for p in products])
-            fav = Favorite(user_id=user_id, product_id=product_id)
+            user = random.choice(users)
+            product = random.choice(products)
+            fav = Favorite(user_id=user.id, product_id=product.id)
             db.session.add(fav)
 
         db.session.commit()

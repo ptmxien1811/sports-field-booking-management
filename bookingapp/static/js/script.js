@@ -32,16 +32,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const contents = document.querySelectorAll(".tab-content");
 
     tabs.forEach(tab => {
-        tab.addEventListener("click", (e) => {
-            e.preventDefault();
-            tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
-            contents.forEach(c => c.classList.remove("active"));
-            const target = tab.dataset.target;
-            const el = document.getElementById(target);
-            if (el) el.classList.add("active");
-        });
+    tab.addEventListener("click", (e) => {
+        e.preventDefault();
+
+        // reset tab
+        tabs.forEach(t => t.classList.remove("active"));
+        tab.classList.add("active");
+
+        // ẩn toàn bộ content
+        contents.forEach(c => c.classList.remove("active"));
+
+        // hiện đúng tab
+        const target = tab.dataset.target;
+        const el = document.getElementById(target);
+        if (el) el.classList.add("active");
     });
+});
 
     // TÌM KIẾM + GỢI Ý
     const searchInput = document.getElementById("search-input");

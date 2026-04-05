@@ -18,7 +18,7 @@ admin = Admin(
     name='Administrator',
     index_view=MyAdminIndexView()
 )
-
+app.secret_key = '@#$%%^^&&&*^%$##@@#^^&&B GVFCDXDVHNJHFCV()(*&^'
 app.config['FLASK_ADMIN_SWATCH'] = 'lux'
 
 # View chung có kiểm tra quyền

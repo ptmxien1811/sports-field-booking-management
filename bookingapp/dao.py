@@ -2,7 +2,21 @@ from bookingapp import db
 from bookingapp.models import Booking, User, Product, Category, Favorite
 from sqlalchemy.orm import joinedload
 
+# ================= USER FILTER =================
+def get_bookings_by_user(user_id):
+    bookings = Booking.query.options(
+        joinedload(Booking.product).joinedload(Product.category)
+    ).filter(Booking.user_id == user_id).all()
 
+    return bookings
+
+
+def get_favorites_by_user(user_id):
+    favorites = Favorite.query.options(
+        joinedload(Favorite.product).joinedload(Product.category)
+    ).filter(Favorite.user_id == user_id).all()
+
+    return favorites
 # ================= BOOKING =================
 def get_all_bookings():
     bookings = Booking.query.options(

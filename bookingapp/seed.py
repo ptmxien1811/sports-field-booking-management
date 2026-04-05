@@ -57,17 +57,31 @@ if __name__ == "__main__":
 
         # Thêm người dùng
         users = [
-            User(username="admin", password="123456"),
-            User(username="Phạm Thị Mỹ Xuyên", password="abc123"),
-            User(username="Lý Đại Long", password="pass456"),
-            User(username="Ngô Thị Thúy Quyên", password="pass789"),
-            User(username="Nguyễn Văn A", password="user123"),
-            User(username="Trần Thị B", password="user456"),
-            User(username="Lê Văn C", password="user789"),
-            User(username="Hoàng Thị D", password="userabc"),
-            User(username="Phạm Văn E", password="userefg"),
-            User(username="Đỗ Thị F", password="userxyz")
+            User(username="admin"),
+            User(username="Phạm Thị Mỹ Xuyên"),
+            User(username="Lý Đại Long"),
+            User(username="Ngô Thị Thúy Quyên"),
+            User(username="Nguyễn Văn Kiên"),
+            User(username="Trần Thị Tú"),
+            User(username="Lê Văn Kha"),
+            User(username="Hoàng Thị Diệu"),
+            User(username="Phạm Văn Anh"),
+            User(username="Đỗ Thị Hòa")
         ]
+
+        # Thiết lập mật khẩu cho từng user
+        users[0].set_password("123456")
+        users[1].set_password("abc123")
+        users[2].set_password("pass456")
+        users[3].set_password("pass789")
+        users[4].set_password("user123")
+        users[5].set_password("user456")
+        users[6].set_password("user789")
+        users[7].set_password("userabc")
+        users[8].set_password("userefg")
+        users[9].set_password("userxyz")
+
+        # Lưu vào database
         db.session.add_all(users)
         db.session.commit()
 

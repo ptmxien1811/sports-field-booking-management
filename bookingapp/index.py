@@ -1,7 +1,9 @@
 from flask import render_template, session, redirect, url_for, request, flash
 from bookingapp import app, db
 import datetime
-from bookingapp.models import Product, User
+
+from bookingapp.dao import get_bookings_by_user, get_favorites_by_user
+from bookingapp.models import Product, User, Booking
 from bookingapp import admin
 
 @app.route("/")
@@ -9,9 +11,17 @@ def home():
     now = datetime.datetime.now().strftime("Tuesday, %d/%m/%Y %H:%M")
     products = Product.query.all()
     username = session.get("username")
+    user_id = session.get("user_id")
+    bookings = []
+    favorites = []
+    if user_id:
+        bookings = get_bookings_by_user(user_id)
+        favorites = get_favorites_by_user(user_id)
+
     return render_template("index.html",
                            current_time=now,
                            products=products,
+                           bookings=bookings,
                            favorites=favorites,
                            username=username)
 
@@ -21,9 +31,9 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
 
-        user = User.query.filter_by(username=username, password=password).first()
+        user = User.query.filter_by(username=username).first()
 
-        if user:
+        if user and user.check_password(password):
             session["user_id"] = user.id
             session["username"] = user.username
             flash("Đăng nhập thành công!", "success")
@@ -65,6 +75,13 @@ def register():
 @app.route("/booked")
 def booked():
     return render_template("booked.html")
+@app.route("/cancel-booking/<int:id>", methods=["POST"])
+def cancel_booking(id):
+    booking = Booking.query.get(id)
+    if booking:
+        db.session.delete(booking)
+        db.session.commit()
+    return redirect(url_for("home"))
 
 @app.route("/favorites")
 def favorites():

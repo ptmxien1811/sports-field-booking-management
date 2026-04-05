@@ -15,9 +15,6 @@ class Category(BaseModel):
     __tablename__ = 'category'
 
     name = Column(String(50), nullable=False)
-    address = Column(String(50), nullable=False)
-    phone = Column(String(50), nullable=False)
-
     products = relationship("Product", back_populates="category")
 
     def __str__(self):
@@ -49,6 +46,8 @@ class Product(BaseModel):
     price = Column(Float, default=0)
     image = Column(String(100))
     active = Column(Boolean, default=True)
+    address = Column(String(50), nullable=False)
+    phone = Column(String(50), nullable=False)
     created_at = Column(DateTime, default=datetime.now)
 
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)

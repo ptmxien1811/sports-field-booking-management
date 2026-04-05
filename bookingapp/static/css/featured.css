@@ -1,0 +1,83 @@
+body.featured-page {
+    background-color: #f4f7f9;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    padding-bottom: 80px; /* Chừa chỗ cho footer không bị đè */
+}
+
+.main-title {
+    text-align: center;
+    color: #004085;
+    padding: 30px 0;
+    margin: 0;
+}
+
+
+.featured-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.featured-card {
+    background: white;
+    border: 1px solid #0066cc;
+    border-radius: 8px;
+    width: calc(33.333% - 20px);
+    padding: 1px;
+    text-align: left;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+.card-image { position: relative; height: 180px; }
+.card-image img { width: 100%; height: 100%; object-fit: cover; }
+.hot-label {
+    position: absolute; top: 10px; right: 10px;
+    background: red; color: white; padding: 2px 8px;
+    border-radius: 4px; font-size: 12px; font-weight: bold;
+}
+
+.card-content { padding: 15px; text-align: center; }
+.card-content h3 { margin: 0 0 10px; font-size: 18px; color: #333; }
+.price { color: #d9534f; font-weight: bold; font-size: 20px; margin-bottom: 15px; }
+
+.btn-booking {
+    width: 100%; background: #004085; color: white;
+    border: none; padding: 10px; border-radius: 5px; cursor: pointer;
+}
+
+
+.bottom-menu ul {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    background: #004085; display: flex; justify-content: space-around;
+    list-style: none; padding: 10px 0; margin: 0; z-index: 1000;
+}
+
+.bottom-menu li a {
+    color: #ffffff;
+    opacity: 0.7;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.3s;
+}
+
+
+/* Khi trang đang được mở (Active) - CHUYỂN SANG ĐỎ */
+.bottom-menu li a.active {
+    color: #ff4500;
+    opacity: 1;
+    font-weight: bold;
+}
+
+/* Hiệu ứng cho Icon khi active */
+.bottom-menu li a.active i {
+    transform: scale(1.2); /* Phóng to nhẹ icon cho nổi bật */
+}

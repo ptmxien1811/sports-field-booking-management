@@ -8,7 +8,7 @@
     box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
     z-index: 1000;
 }
-.bottom-nav ul {
+/*.bottom-nav ul {
     list-style: none;
     display: flex;
     justify-content: space-around;
@@ -22,6 +22,35 @@
 }
 .bottom-nav ul li a.active {
     border-bottom: 2px solid #ffffff;
+}
+*/
+.bottom-menu ul {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    background: #004085; display: flex; justify-content: space-around;
+    list-style: none; padding: 10px 0; margin: 0; z-index: 1000;
+}
+
+.bottom-menu li a {
+    color: #ffffff;
+    opacity: 0.7;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.3s;
+}
+
+
+/* Khi trang đang được mở (Active) - CHUYỂN SANG ĐỎ */
+.bottom-menu li a.active {
+    color: #ff4500;
+    opacity: 1;
+    font-weight: bold;
+}
+
+/* Hiệu ứng cho Icon khi active */
+.bottom-menu li a.active i {
+    transform: scale(1.2); /* Phóng to nhẹ icon cho nổi bật */
 }
 
 body {

@@ -4,6 +4,7 @@
 
 {% block content %}
 <header class="top-bar">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <div class="date-time"> Welcome to Sport Field Booking  </div>
     <div class="auth">
         {% if username %}
@@ -48,8 +49,10 @@
 </section>
 
 <section id="booked" class="tab-content">
-    <h2>Sân đã đặt</h2>
-    <div id="booked-list"></div>
+
+
+
+
 </section>
 
 <section id="favorites" class="tab-content">
@@ -57,3 +60,5 @@
     <div id="fav-list"></div>
 </section>
 {% endblock %}
+
+{% include 'layout/footer.html' %}

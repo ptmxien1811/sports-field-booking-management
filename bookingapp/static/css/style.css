@@ -121,6 +121,7 @@ main {
 }
 
 /* Mặc định ẩn */
+
 .tab-content {
     display: none;
     margin: 20px;
@@ -128,7 +129,7 @@ main {
 
 /* Khi active */
 .tab-content.active {
-    display: block;
+    display: flex;
 }
 
 /* CHỈ venues mới dùng flex */
@@ -139,7 +140,7 @@ main {
 }
 /* Danh sách sân */
 .venues {
-    display: flex;
+    /*display: flex;*/
     flex-wrap: wrap;
     gap: 20px;
     margin: 20px;
@@ -200,33 +201,34 @@ main {
 }
 .fav-btn.active { color: #ff3366; }
 
-/* Thanh dưới cố định */
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #004080;
-    padding: 20px 0;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
-.bottom-nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: space-around;
-    margin: 0;
-    padding: 0;
-}
-.bottom-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-.bottom-nav ul li a.active {
-    border-bottom: 2px solid #ffffff;
+.bottom-menu ul {
+    position: fixed; bottom: 0; left: 0; width: 100%;
+    background: #004085; display: flex; justify-content: space-around;
+    list-style: none; padding: 10px 0; margin: 0; z-index: 1000;
 }
 
+.bottom-menu li a {
+    color: #ffffff;
+    opacity: 0.7;
+    text-decoration: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    transition: 0.3s;
+}
+
+
+/* Khi trang đang được mở (Active) - CHUYỂN SANG ĐỎ */
+.bottom-menu li a.active {
+    color: #ff4500;
+    opacity: 1;
+    font-weight: bold;
+}
+
+/* Hiệu ứng cho Icon khi active */
+.bottom-menu li a.active i {
+    transform: scale(1.2); /* Phóng to nhẹ icon cho nổi bật */
+}
 /* Suggestions */
 .suggestions {
     list-style: none;
@@ -298,82 +300,4 @@ main {
 .form-section button:hover {
     background-color: #004080;
 }
-/*Footer and feature*/
-body.featured-page {
-    background-color: #f4f7f9;
-    margin: 0;
-    font-family: Arial, sans-serif;
-    padding-bottom: 80px; /* Chừa chỗ cho footer không bị đè */
-}
 
-.main-title {
-    text-align: center;
-    color: #004085;
-    padding: 30px 0;
-    margin: 0;
-}
-
-/* --- LƯỚI SÂN (GRID) --- */
-.product-grid {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 25px;
-    padding: 0 20px;
-}
-
-/* --- KHUNG SÂN (CARD) --- */
-.product-card {
-    width: 300px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-    overflow: hidden;
-}
-
-.card-image { position: relative; height: 180px; }
-.card-image img { width: 100%; height: 100%; object-fit: cover; }
-.hot-label {
-    position: absolute; top: 10px; right: 10px;
-    background: red; color: white; padding: 2px 8px;
-    border-radius: 4px; font-size: 12px; font-weight: bold;
-}
-
-.card-content { padding: 15px; text-align: center; }
-.card-content h3 { margin: 0 0 10px; font-size: 18px; color: #333; }
-.price { color: #d9534f; font-weight: bold; font-size: 20px; margin-bottom: 15px; }
-
-.btn-booking {
-    width: 100%; background: #004085; color: white;
-    border: none; padding: 10px; border-radius: 5px; cursor: pointer;
-}
-
-
-.bottom-menu ul {
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    background: #004085; display: flex; justify-content: space-around;
-    list-style: none; padding: 10px 0; margin: 0; z-index: 1000;
-}
-
-.bottom-menu li a {
-    color: #ffffff;
-    opacity: 0.7;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: 0.3s;
-}
-
-
-/* Khi trang đang được mở (Active) - CHUYỂN SANG ĐỎ */
-.bottom-menu li a.active {
-    color: #ff4500; /* Màu đỏ cam cực cháy */
-    opacity: 1;
-    font-weight: bold;
-}
-
-/* Hiệu ứng cho Icon khi active */
-.bottom-menu li a.active i {
-    transform: scale(1.2); /* Phóng to nhẹ icon cho nổi bật */
-}

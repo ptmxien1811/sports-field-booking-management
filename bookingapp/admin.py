@@ -1,12 +1,25 @@
 from flask import session, redirect, url_for, flash
-from flask_admin import Admin
+from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from bookingapp import app, db
 from bookingapp.models import Category, Product, User
 
-# Tạo admin
-admin = Admin(app, name='Administration')
-app.secret_key = '@#$%%^^&&&*^%$##@@#^^&&B GVFCDXDVHNJHFCV()(*&^'
+class MyAdminIndexView(AdminIndexView):
+    @expose('/')
+    def index(self):
+        if not (session.get("username") and session.get("username").lower() == "admin"):
+            flash("Bạn không có quyền truy cập!", "danger")
+            return redirect(url_for("login"))
+
+        return self.render('admin/home-admin.html')
+
+admin = Admin(
+    app=app,
+    name='Administrator',
+    index_view=MyAdminIndexView()
+)
+
+app.config['FLASK_ADMIN_SWATCH'] = 'lux'
 
 # View chung có kiểm tra quyền
 class SecureModelView(ModelView):
@@ -15,7 +28,6 @@ class SecureModelView(ModelView):
         return session.get("username") and session.get("username").lower() == "admin"
 
     def inaccessible_callback(self, name, **kwargs):
-        flash("Bạn không có quyền truy cập trang này!", "danger")
         return redirect(url_for("login"))
 
 class CategoryView(SecureModelView):

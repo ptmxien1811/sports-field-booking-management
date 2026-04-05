@@ -1,0 +1,10 @@
+{% extends 'admin/master.html' %}
+
+{% block head_css %}
+    {{ super() }}
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/home-admin.css') }}">
+{% endblock %}
+
+{% block body %}
+<p id="test">Chào mừng đến với admin panel</p>
+{% endblock %}

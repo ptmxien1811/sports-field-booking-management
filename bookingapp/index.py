@@ -77,7 +77,7 @@ def explore():
 @app.route("/featured")
 def featured():
     # chọn 3 sân có giá cao nhất hoặc mới nhất làm nổi bật
-    featured_products = Product.query.filter_by(active=True).order_by(Product.price.desc()).limit(3).all()
+    featured_products = Product.query.filter_by(active=True).order_by(Product.price.desc()).limit(6).all()
     return render_template("featured.html",
                            products=featured_products)
 

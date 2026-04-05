@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Khám Phá</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/explore.css') }}">
 </head>
 <body>
@@ -34,14 +35,7 @@
         </div>
     </div>
 
-    <nav class="bottom-nav">
-        <ul>
-            <li><a href="{{ url_for('home') }}">Trang chủ</a></li>
-            <li class="explore-button"><a href="{{ url_for('explore') }}">Khám phá</a></li>
-            <li><a href="{{ url_for('featured') }}">Nổi bật</a></li>
-            <li><a href="{{ url_for('account') }}">Tài khoản</a></li>
-        </ul>
-    </nav>
     <script src="{{ url_for('static', filename='js/explore.js') }}"></script>
+    {% include 'layout/footer.html' %}
 </body>
 </html>

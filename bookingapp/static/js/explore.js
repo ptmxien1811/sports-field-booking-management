@@ -1,4 +1,4 @@
-    // TAB chuyển nội dung
+// TAB chuyển nội dung
     const tabs = document.querySelectorAll(".nav-tabs a");
     const contents = document.querySelectorAll(".tab-content");
 

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Sân Thể Thao Nổi Bật</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/featured.css') }}">
 </head>
 <body class="featured-page">
 
@@ -13,9 +13,9 @@
             <i class="fa-solid fa-fire" style="color: #ff4500"></i> MỤC NỔI BẬT <i class="fa-solid fa-fire" style="color: #ff4500"></i>
         </h1>
 
-        <div class="product-grid">
+        <div class="featured-grid">
             {% for p in products %}
-            <div class="product-card">
+            <div class="featured-card">
                 <div class="card-image">
                     <img src="{{ url_for('static', filename='image/' + p.image) }}" alt="{{ p.name }}">
                     <span class="hot-label">HOT</span>

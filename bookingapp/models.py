@@ -45,7 +45,7 @@ class User(BaseModel):
 class Product(BaseModel):
     __tablename__ = 'products'
 
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, unique=True)
     price = Column(Float, default=0)
     image = Column(String(100))
     active = Column(Boolean, default=True)

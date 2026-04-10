@@ -1,0 +1,159 @@
+{% extends "layout/base.html" %}
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/venue_detail.css') }}">
+
+<div class="vd-page">
+
+  <div class="vd-top-images">
+    <img src="{{ url_for('static', filename='image/' + product.image) }}" class="vd-main-img">
+  </div>
+
+  <div class="vd-main-grid">
+
+    <!-- CỘT TRÁI -->
+    <div class="vd-left">
+      <h2 class="vd-title">{{ product.name }}</h2>
+      <p class="vd-addr">📍 {{ product.category.address }}</p>
+
+      <div class="vd-box">
+        <h3 class="vd-section-title">ℹ️ Thông tin chi tiết</h3>
+        <p class="vd-desc">{{ product.description }}</p>
+      </div>
+
+      <div class="vd-box">
+        <h3 class="vd-section-title">🎁 Tiện ích đi kèm</h3>
+        <div class="vd-amenities">
+          {% for a in product.amenities %}
+          <span>{{ a.icon }} {{ a.label }}</span>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="vd-box">
+        <h3 class="vd-section-title">⭐ Đánh giá từ người chơi</h3>
+        <div class="vd-rating-row">
+          <span class="vd-stars">★★★★★</span>
+          <strong>{{ product.avg_rating }}</strong>
+          <span class="vd-rating-count">{{ product.reviews|length }} đánh giá</span>
+          <button class="vd-review-btn" onclick="toggleReviewForm()">Viết đánh giá</button>
+        </div>
+
+        <!-- Form đánh giá -->
+        <div id="reviewForm" style="display:none; margin-bottom:16px; padding:14px;
+             background:#f9f9f9; border-radius:10px; border:1px solid #e0e0e0">
+          <p style="font-weight:600; margin-bottom:10px">Đánh giá của bạn</p>
+          <div class="star-select" id="starSelect">
+            {% for i in range(1, 6) %}
+            <span class="star-opt" data-val="{{ i }}"
+                  onclick="setRating({{ i }})">★</span>
+            {% endfor %}
+          </div>
+          <textarea id="reviewContent" rows="3"
+            placeholder="Chia sẻ trải nghiệm của bạn..."
+            style="width:100%; margin-top:10px; padding:8px;
+                   border:1px solid #ddd; border-radius:8px;
+                   font-size:14px; resize:none"></textarea>
+          <button onclick="submitReview()"
+            style="margin-top:8px; padding:8px 20px;
+                   background:#1a73e8; color:#fff;
+                   border:none; border-radius:8px; cursor:pointer">
+            Gửi đánh giá
+          </button>
+        </div>
+
+        <!-- Danh sách reviews -->
+        <div id="reviewList">
+          {% for review in product.reviews %}
+          <div class="vd-review-card">
+            <div class="vd-avatar">{{ review.user.username[0] }}</div>
+            <div class="vd-review-body">
+              <div class="vd-review-header">
+                <span class="vd-rv-name">{{ review.user.username }}</span>
+                <span class="vd-rv-date">{{ review.date_str }}</span>
+              </div>
+              <div class="vd-stars-sm" style="color:#f5a623">{{ review.stars }}</div>
+              <p class="vd-rv-text">{{ review.content }}</p>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- CỘT PHẢI: BOOKING -->
+    <div class="vd-right">
+      <div class="vd-booking-card" data-product-id="{{ product.id }}">
+
+        <div class="vd-price-row">
+          <span class="vd-price">{{ "{:,.0f}".format(product.price) }}đ</span>
+          <span class="vd-price-unit"> / giờ</span>
+        </div>
+        <div class="vd-avail-badge">
+          <span class="vd-avail-dot"></span>
+          <span id="availText">Đang tải...</span>
+        </div>
+
+        <!-- Calendar -->
+        <div class="cal-section">
+          <div class="cal-header">
+            <div>
+              <p class="cal-title">Chọn Ngày</p>
+              <p class="cal-sub" id="monthLabel"></p>
+            </div>
+            <div class="nav-btns">
+              <button class="nav-btn" onclick="changeMonth(-1)">&#8249;</button>
+              <button class="nav-btn" onclick="changeMonth(1)">&#8250;</button>
+            </div>
+          </div>
+          <div class="dow-row">
+            <span>T2</span><span>T3</span><span>T4</span>
+            <span>T5</span><span>T6</span>
+            <span class="red">T7</span><span class="red">CN</span>
+          </div>
+          <div class="days-grid" id="daysGrid"></div>
+        </div>
+
+        <hr class="vd-divider">
+
+        <!-- Time slots -->
+        <div class="ts-section">
+          <div class="ts-header">
+            <p class="ts-title">Chọn Khung Giờ</p>
+            <div class="ts-legend">
+              <span class="leg"><i class="leg-dot empty"></i> Trống</span>
+              <span class="leg"><i class="leg-dot booked"></i> Đã đặt</span>
+              <span class="leg"><i class="leg-dot active"></i> Đang chọn</span>
+            </div>
+          </div>
+          <p class="period-label">☀️ Buổi Sáng</p>
+          <div class="slots" id="morning"></div>
+          <p class="period-label">🌤️ Buổi Chiều</p>
+          <div class="slots" id="afternoon"></div>
+          <p class="period-label">🌙 Buổi Tối</p>
+          <div class="slots" id="evening"></div>
+          <div class="warn-box">
+            ⚠️ Các khung giờ sau 22:00 hiện không khả dụng cho đặt trước trực tuyến.
+          </div>
+        </div>
+
+        <button class="vd-book-btn" id="bookBtn">Đặt sân ngay</button>
+        <div id="bookMsg"
+             style="font-size:13px; text-align:center; margin-top:6px;"></div>
+        <p class="vd-book-note">Không thu phí đặt cọc. Hủy miễn phí trước 2 tiếng</p>
+
+        <div class="vd-map-box">
+          <p style="font-size:13px; font-weight:600; margin-bottom:6px">📌 Vị trí sân</p>
+          <p class="vd-map-addr">{{ product.category.address }}</p>
+          <a href="https://maps.google.com/?q={{ product.category.address }}"
+             target="_blank" class="vd-map-link">Xem trên Google Maps ↗</a>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Chỉ cần 1 dòng này, không còn script inline -->
+<script src="{{ url_for('static', filename='js/venue_detail.js') }}"></script>
+{% endblock %}

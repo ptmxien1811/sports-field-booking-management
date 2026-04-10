@@ -42,7 +42,9 @@
         <h3>{{ product.name }}</h3>
         <p>Địa chỉ: {{ product.category.address }}</p>
         <p>Giá: {{ product.price }}đ</p>
-        <button class="book-btn">ĐẶT LỊCH</button>
+        <a href="{{ url_for('venue_detail', id=product.id) }}">
+            <button class="book-btn">ĐẶT LỊCH</button>
+        </a>
         <span class="fav-btn">❤️</span>
     </div>
     {% endfor %}

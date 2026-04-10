@@ -44,14 +44,13 @@
         <p>SĐT: {{ product.phone }}</p>
         <p>Giá: {{ product.price }}đ</p>
         <button class="book-btn">ĐẶT LỊCH</button>
-        <span class="fav-btn">❤️</span>
+        <span class="fav-btn"></span>
     </div>
     {% endfor %}
 </section>
 
 <section id="booked" class="tab-content">
     <h2>Sân đã đặt</h2>
-
     {% if bookings %}
         <div class="booked-list">
             {% for b in bookings %}
@@ -98,6 +97,9 @@
         <p>Chưa có sân yêu thích</p>
     {% endif %}
 </section>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+{% endblock %}
 {% endblock %}
 
 {% include 'layout/footer.html' %}

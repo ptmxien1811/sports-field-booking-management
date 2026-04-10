@@ -12,18 +12,21 @@ def home():
     products = Product.query.all()
     username = session.get("username")
     user_id = session.get("user_id")
+
     bookings = []
     favorites = []
     if user_id:
         bookings = get_bookings_by_user(user_id)
         favorites = get_favorites_by_user(user_id)
 
+
     return render_template("index.html",
                            current_time=now,
                            products=products,
                            bookings=bookings,
                            favorites=favorites,
-                           username=username)
+                           username=username,
+                           )
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -75,14 +78,22 @@ def register():
 @app.route("/booked")
 def booked():
     return render_template("booked.html")
+
+#Kiem tra nguoi huy la nguoi dat san
 @app.route("/cancel-booking/<int:id>", methods=["POST"])
 def cancel_booking(id):
     booking = Booking.query.get(id)
-    if booking:
+    current_user_id = session.get("user_id")
+
+    if booking and booking.user_id == current_user_id:
         db.session.delete(booking)
         db.session.commit()
-    return redirect(url_for("home"))
+        flash("Hủy sân thành công!", "success")
 
+    else:
+        flash("Bạn không có quyền hủy sân này!", "danger")
+
+    return redirect(url_for("home",_anchor="booked"))
 @app.route("/favorites")
 def favorites():
     return render_template("favorites.html")

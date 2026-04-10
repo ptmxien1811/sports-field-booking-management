@@ -137,7 +137,7 @@ if __name__ == "__main__":
             product = random.choice(products)
             start_day = random.randint(1, 28)
             start_hour = random.randint(6, 20)
-            start_time = datetime(2026, 4                              , start_day, start_hour, 0)
+            start_time = datetime(2026, 4, start_day, start_hour, 0)
             end_time = start_time + timedelta(hours=random.choice([1, 2, 3]))
             status = random.choice(["confirmed", "cancelled", "pending"])
 

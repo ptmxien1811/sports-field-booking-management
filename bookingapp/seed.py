@@ -30,6 +30,7 @@ def add_amenities(product, items):
 
 if __name__ == "__main__":
     with app.app_context():
+        # Xóa dữ liệu cũ và tạo lại
         db.drop_all()
         db.create_all()
 

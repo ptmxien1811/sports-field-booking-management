@@ -288,19 +288,6 @@ main {
     border-radius: 6px;
 }
 
-    width: 100%;
-    padding: 10px;
-    background-color: #0066cc;
-    color: white;
-    border: none;
-    border-radius: 20px; /* bo tròn góc */
-    cursor: pointer;
-    font-size: 16px;
-    margin-top: 10px;
-    white-space: nowrap;      /* không cho xuống dòng */
-    overflow: hidden;         /* ẩn phần vượt quá */
-    text-overflow: ellipsis;  /* thêm "..." nếu chữ quá dài */
-}
 
 .form-section button:hover {
     background-color: #004080;
@@ -376,6 +363,9 @@ main {
     width: 100%;
     border-radius: 5px;
 }
+form{
+    margin: 0px;
+}
 
 .cancel-btn:hover {
     background-color: #990000;
@@ -412,5 +402,4 @@ main {
     padding-top: 70px;
     padding-bottom: 80px;
 }
-
 

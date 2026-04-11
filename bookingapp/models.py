@@ -10,6 +10,7 @@ class BaseModel(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
 
+# ================= CATEGORY =================
 class Category(BaseModel):
     __tablename__ = 'category'
     name    = Column(String(100), nullable=False)
@@ -21,8 +22,10 @@ class Category(BaseModel):
         return self.name
 
 
+# ================= USER =================
 class User(BaseModel):
     __tablename__ = 'user'
+
     username = Column(String(80), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     avatar   = Column(String(200), default="default_avatar.png")
@@ -81,6 +84,7 @@ class Product(BaseModel):
         return self.name
 
 
+# ================= BOOKING =================
 class Booking(BaseModel):
     __tablename__ = 'booking'
     user_id    = Column(Integer, ForeignKey('user.id'),     nullable=False)
@@ -95,6 +99,7 @@ class Booking(BaseModel):
     product = relationship("Product", back_populates="bookings")
 
 
+# ================= FAVORITE =================
 class Favorite(BaseModel):
     __tablename__ = 'favorite'
     user_id    = Column(Integer, ForeignKey('user.id'),     nullable=False)

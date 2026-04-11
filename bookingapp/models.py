@@ -65,11 +65,11 @@ class Product(BaseModel):
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
 
     category   = relationship("Category",  back_populates="products")
-    bookings   = relationship("Booking",   back_populates="product")
-    favorites  = relationship("Favorite",  back_populates="product")
-    amenities  = relationship("Amenity",   back_populates="product")
-    time_slots = relationship("TimeSlot",  back_populates="product")
-    reviews    = relationship("Review",    back_populates="product")
+    bookings   = relationship("Booking",   back_populates="product", cascade="all, delete-orphan")
+    favorites  = relationship("Favorite",  back_populates="product", cascade="all, delete-orphan")
+    amenities  = relationship("Amenity",   back_populates="product", cascade="all, delete-orphan")
+    time_slots = relationship("TimeSlot",  back_populates="product", cascade="all, delete-orphan")
+    reviews    = relationship("Review",    back_populates="product", cascade="all, delete-orphan")
 
     @property
     def avg_rating(self):

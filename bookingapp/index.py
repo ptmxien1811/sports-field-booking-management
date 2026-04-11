@@ -6,14 +6,14 @@ from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,
                              add_review, get_product_by_id)
 from bookingapp.models import Product, User, Booking
 from bookingapp import admin
-from datetime import datetime, date as date_type
+from datetime import datetime, timedelta,date as date_type
 import datetime as dt
 
 
 # ===== HOME =====
 @app.route("/")
 def home():
-    now = datetime.datetime.now().strftime("Tuesday, %d/%m/%Y %H:%M")
+    # now = datetime.datetime.now().strftime("Tuesday, %d/%m/%Y %H:%M")
     products  = Product.query.filter_by(active=True).all()
     username  = session.get("username")
     user_id   = session.get("user_id")
@@ -26,7 +26,7 @@ def home():
 
 
     return render_template("index.html",
-                           current_time=now,
+                           # current_time=now,
                            products=products,
                            bookings=bookings,
                            favorites=favorites,
@@ -130,15 +130,15 @@ def api_book():
 
 
 # ===== API: HỦY SÂN =====
-@app.route("/api/cancel/<int:booking_id>", methods=["POST"])
-def api_cancel(booking_id):
-    if not session.get("user_id"):
-        return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
-
-    ok = cancel_booking_by_id(booking_id, session["user_id"])
-    if ok:
-        return jsonify({"ok": True})
-    return jsonify({"ok": False, "msg": "Không tìm thấy booking"}), 404
+# @app.route("/api/cancel/<int:booking_id>", methods=["POST"])
+# def api_cancel(booking_id):
+#     if not session.get("user_id"):
+#         return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
+#
+#     ok = cancel_booking_by_id(booking_id, session["user_id"])
+#     if ok:
+#         return jsonify({"ok": True})
+#     return jsonify({"ok": False, "msg": "Không tìm thấy booking"}), 404
 
 
 # ===== API: TOGGLE FAVORITE =====
@@ -177,19 +177,37 @@ def api_review(product_id):
 
 # ===== CANCEL BOOKING (form POST từ index.html) =====
 @app.route("/cancel-booking/<int:id>", methods=["POST"])
-def cancel_booking(id):
+def cancel_booking_final(id):
     booking = Booking.query.get(id)
-    current_user_id = session.get("user_id")
+    user_id = session.get("user_id")
 
-    if booking and booking.user_id == current_user_id:
-        db.session.delete(booking)
-        db.session.commit()
-        flash("Hủy sân thành công!", "success")
+    if not booking or booking.user_id != user_id:
+        flash("Không tìm thấy đơn hàng hoặc bạn không có quyền!", "danger")
+        return redirect(url_for("home", _anchor="booked"))
 
-    else:
-        flash("Bạn không có quyền hủy sân này!", "danger")
+        # GIẢ LẬP GIỜ TEST: 7:30 sáng ngày 11/4
+    now_time = datetime(2026, 4, 12, 7, 30)
 
-    return redirect(url_for("home",_anchor="booked"))
+    #đã qua giờ kết thúc
+    if now_time > booking.end_time:
+        flash("Sân này đã thi đấu xong , không thể hủy!", "info")
+        return redirect(url_for("home", _anchor="booked"))
+
+    #đang trong giờ đá
+    if booking.start_time <= now_time <= booking.end_time:
+        flash("Sân đang trong giờ sử dụng, bạn không thể hủy lúc này!", "danger")
+        return redirect(url_for("home", _anchor="booked"))
+
+    #< 2 tiếng tới giờ đá
+    if now_time < booking.start_time:
+        if booking.start_time - now_time < timedelta(hours=2):
+            flash("Sân sắp đá, không được hủy!", "warning")
+            return redirect(url_for("home", _anchor="booked"))
+    db.session.delete(booking)
+    db.session.commit()
+
+    flash("Hệ thống xác nhận: Đã hủy sân thành công!", "success")
+    return redirect(url_for("home", _anchor="booked"))
 @app.route("/favorites")
 def favorites():
     return render_template("favorites.html")

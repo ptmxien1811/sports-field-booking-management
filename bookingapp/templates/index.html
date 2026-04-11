@@ -40,8 +40,8 @@
     <div class="venue-card">
         <img src="{{ url_for('static', filename='image/' + product.image) }}" alt="{{ product.name }}">
         <h3>{{ product.name }}</h3>
-        <p>Địa chỉ: {{ product.address }}</p>
-        <p>SĐT: {{ product.phone }}</p>
+        <p>Địa chỉ: {{ product.category.address }}</p>
+        <p>SĐT: {{ product.category.phone }}</p>
         <p>Giá: {{ product.price }}đ</p>
         <a href="{{ url_for('venue_detail', id=product.id) }}">
             <button class="book-btn">ĐẶT LỊCH</button>
@@ -63,8 +63,7 @@
                          alt="{{ b.product.name }}">
 
                     <h3>{{ b.product.name }}</h3>
-                    <p>Địa chỉ: {{ b.product.address }}</p>
-                    <p>SĐT: {{ b.product.phone }}</p>
+                    <p>Địa chỉ: {{ b.product.category.address }}</p>
                     <p>Thời gian: {{ b.start_time }} - {{ b.end_time }}</p>
                     <p>Trạng thái: {{ b.status }}</p>
 
@@ -88,8 +87,7 @@
                 <div class="venue-card">
                     <img src="{{ url_for('static', filename='image/' + f.product.image) }}">
                     <h3>{{ f.product.name }}</h3>
-                    <p>Địa chỉ: {{ f.product.address }}</p>
-                    <p>SĐT: {{ f.product.phone }}</p>
+                    <p>Địa chỉ: {{ f.product.category.address }}</p>
                     <p>Giá: {{ f.product.price }}đ</p>
                     <button class="book-btn">ĐẶT LỊCH</button>
                     <span class="fav-btn">❤️</span>
@@ -100,9 +98,8 @@
         <p>Chưa có sân yêu thích</p>
     {% endif %}
 </section>
-{% block scripts %}
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
-{% endblock %}
+
+
 {% endblock %}
 
 {% include 'layout/footer.html' %}

@@ -43,13 +43,13 @@ class CategoryView(SecureModelView):
 class ProductView(SecureModelView):
     can_view_details = True
     can_export = True
-    column_searchable_list = ['name', 'price','address','phone']
-    column_filters = ['name', 'price','address','phone']
+    column_searchable_list = ['name', 'price']
+    column_filters = ['name', 'price']
     column_labels = {
         'name': 'Tên Sân',
         'price': 'Giá',
-        'address': 'Địa Chỉ',
-        'phone':'SĐT',
+        # 'address': 'Địa Chỉ',
+        # 'phone':'SĐT',
         'image': 'Ảnh',
         'active': 'Hoạt động',
         'created_at': 'Ngày tạo',

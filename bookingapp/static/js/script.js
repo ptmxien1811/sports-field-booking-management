@@ -37,11 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // === 3. XỬ LÝ TƯƠNG TÁC NÚT (Đặt sân & Yêu thích) ===
-    document.querySelectorAll(".book-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            alert("Bạn đã chọn đặt lịch thành công!");
-        });
-    });
+    // document.querySelectorAll(".book-btn").forEach(btn => {
+    //     btn.addEventListener("click", () => {
+    //         alert("Bạn đã chọn đặt lịch thành công!");
+    //     });
+    // });
 
     // Toggle trái tim yêu thích
     document.querySelectorAll(".fav-btn").forEach(btn => {
@@ -61,9 +61,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // TAB chuyển nội dung
-    const tabs = document.querySelectorAll(".nav-tabs a");
-    const contents = document.querySelectorAll(".tab-content");
+
 
     // === 4. TÌM KIẾM + GỢI Ý ===
     const venues = [
@@ -387,3 +385,5 @@ document.addEventListener('DOMContentLoaded', () => {
     // Mặc định 5 sao
     setRating(5);
 });
+
+//Huy san

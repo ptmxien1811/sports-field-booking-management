@@ -24,7 +24,7 @@ class MyAdminIndexView(AdminIndexView):
                                  .filter(Booking.status == 'confirmed') \
                                  .scalar() or 0
         }
-        return self.render('admin/home-admin.html', stats=stats)
+        return self.render('home-admin.html', stats=stats)
 
 admin = Admin(
     app=app,

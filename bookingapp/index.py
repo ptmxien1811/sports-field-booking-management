@@ -185,8 +185,8 @@ def cancel_booking_final(id):
         flash("Không tìm thấy đơn hàng hoặc bạn không có quyền!", "danger")
         return redirect(url_for("home", _anchor="booked"))
 
-        # GIẢ LẬP GIỜ TEST: 7:30 sáng ngày 11/4
-    now_time = datetime(2026, 4, 12, 7, 30)
+        # GIẢ LẬP GIỜ TEST:
+    now_time = datetime(2026, 4, 1, 7, 30)
 
     #đã qua giờ kết thúc
     if now_time > booking.end_time:

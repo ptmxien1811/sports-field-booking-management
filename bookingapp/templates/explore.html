@@ -1,41 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Khám Phá</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/explore.css') }}">
-</head>
-<body>
-    <div class="big-title">KHÁM PHÁ</div>
-    <div class="explores">
-        <ul class="nav-tabs">
+
+{% extends "layout/base.html" %}
+
+{% block title %}Khám Phá{% endblock %}
+
+{% block content %}
+<div class="container py-5 text-center">
+    <h1 class="big-title fw-bold mb-4" style="color: #003366;">
+        <i class="fa-solid fa-earth-asia text-info me-2"></i>KHÁM PHÁ<i class="fa-solid fa-earth-asia text-info me-2"></i>
+    </h1>
+
+    <div class="explores shadow-sm bg-white"> <ul class="nav-tabs d-flex justify-content-center border-0 mb-0">
             <li><a href="#" data-target="all" class="active">Tất cả</a></li>
             <li><a href="#" data-target="sale">Ưu đãi</a></li>
             <li><a href="#" data-target="events">Sự kiện</a></li>
             <li><a href="#" data-target="notice">Thông báo</a></li>
         </ul>
 
-        <p class="line">------------------------------------------------------------------------------------------</p>
+        <hr class="my-4 mx-auto w-75" style="border-top: 2px dashed #0066cc;">
 
-        <div id="all" class="tab-content active">
-            <p><i>Chưa có ai đăng bài cả. Quay lại sau nhé! ~</i></p>
+        <div id="all" class="tab-content active text-center">
+            <p class="py-5"><i>Chưa có ai đăng bài cả. Quay lại sau nhé! ~</i></p>
+        </div>
+        <div id="sale" class="tab-content active text-center">
+           <p class="py-5"><i>Chưa có ưu đãi! ~</i></p>
+        </div>
+        <div id="events" class="tab-content active text-center">
+           <p class="py-5"><i>Chưa có sự kiện! ~</i></p>
+        </div>
+        <div id="notice" class="tab-content active text-center">
+           <p class="py-5"><i>Chưa có thông báo! ~</i></p>
         </div>
 
-        <div id="sale" class="tab-content">
-            <p><i>Chưa có ưu đãi! ~</i></p>
         </div>
-
-        <div id="events" class="tab-content">
-            <p><i>Chưa có sự kiện! ~</i></p>
-        </div>
-
-        <div id="notice" class="tab-content">
-            <p><i>Chưa có thông báo! ~</i></p>
-        </div>
-    </div>
-
-    <script src="{{ url_for('static', filename='js/explore.js') }}"></script>
-    {% include 'layout/footer.html' %}
-</body>
-</html>
+</div>
+{% endblock %}

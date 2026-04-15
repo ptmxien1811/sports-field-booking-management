@@ -1,117 +1,80 @@
-.bottom-nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    background-color: #004080;
-    padding: 20px 0;
-    box-shadow: 0 -2px 5px rgba(0,0,0,0.2);
-    z-index: 1000;
-}
-/*.bottom-nav ul {
-    list-style: none;
-    display: flex;
-    justify-content: space-around;
-    margin: 0;
-    padding: 0;
-}
-.bottom-nav ul li a {
-    color: white;
-    text-decoration: none;
-    font-weight: bold;
-}
-.bottom-nav ul li a.active {
-    border-bottom: 2px solid #ffffff;
-}
-*/
-.bottom-menu ul {
-    position: fixed; bottom: 0; left: 0; width: 100%;
-    background: #004085; display: flex; justify-content: space-around;
-    list-style: none; padding: 10px 0; margin: 0; z-index: 1000;
-}
-
-.bottom-menu li a {
-    color: #ffffff;
-    opacity: 0.7;
-    text-decoration: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    transition: 0.3s;
-}
-
-
-/* Khi trang đang được mở (Active) - CHUYỂN SANG ĐỎ */
-.bottom-menu li a.active {
-    color: #ff4500;
-    opacity: 1;
-    font-weight: bold;
-}
-
-/* Hiệu ứng cho Icon khi active */
-.bottom-menu li a.active i {
-    transform: scale(1.2); /* Phóng to nhẹ icon cho nổi bật */
-}
-
-body {
-    background-color: #e6f0ff;
-    color: #003366;
-    font-family: Tahoma, sans-serif;
-    padding-bottom: 70px;
-    margin: 0;
-}
-
-.line {
-    font-size: 30px;
-    text-align: center;
-}
-
-.tab-content {
-    display: none;
-    text-align: center;
-    font-size: 21px;
-}
-
-.tab-content.active {
-    display: block;
-}
-.explores {
-    border: 5px solid #0066cc;
-    border-radius: 35px;
-    margin: 20px auto;
-    width: 80%;
-    padding: 20px;
-    overflow: hidden;
-}
-
-.nav-tabs {
-    justify-content: center;
-    list-style: none;
-    display: flex;
-    gap: 25px;
-    padding: 0;
-    text-align: center;
-    font-size: 35px;
+.big-title {
     margin: 30px 0;
+    text-align: center;
+    font-size: 48px; /* Giảm nhẹ từ 60px để cân đối hơn trên mobile */
+    font-weight: 800;
+    color: #004080;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+}
+
+/* 2. Khung bao bọc nội dung (Explores box) */
+.explores {
+    background-color: white; /* Thêm nền trắng để nổi bật trên nền xanh nhạt của body */
+    border: 3px solid #0066cc;
+    border-radius: 25px;
+    margin: 20px auto;
+    width: 90%; /* Tăng chiều rộng một chút so với 80% để thoáng hơn */
+    max-width: 1000px; /* Giới hạn độ rộng tối đa trên PC */
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05); /* Đổ bóng nhẹ cho hiện đại */
+}
+
+/* 3. Thanh Tab điều hướng */
+.nav-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap; /* Tự động xuống dòng nếu màn hình nhỏ */
+    list-style: none;
+    padding: 0;
+    margin-bottom: 30px;
 }
 
 .nav-tabs li a {
     background-color: #0066cc;
-    color: white;
-    padding: 8px 18px;
-    border-radius: 5px;
+    color: white !important;
+    padding: 10px 25px;
     text-decoration: none;
+    font-size: 18px;
+    font-weight: 600;
     cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-block;
 }
 
+/* Trạng thái Tab đang chọn */
 .nav-tabs li a.active {
     background-color: #004080;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
-.big-title {
-    margin: 25px;
+/* 4. Nội dung bên trong các Tab */
+.tab-content {
+    display: none;
     text-align: center;
-    font-size: 60px;
-    font-weight: Bold;
-    text-transform: uppercase;
+    font-size: 20px;
+    color: #555;
+    padding: 40px 0;
+    min-height: 200px; /* Giữ khung không bị sụp khi chưa có bài */
+}
+
+.tab-content.active {
+    display: block;
+    animation: fadeIn 0.5s ease; /* Thêm hiệu ứng hiện ra mượt mà */
+}
+
+/* Hiệu ứng mượt khi chuyển tab */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Đường kẻ ngang trang trí */
+.line-separator {
+    border: none;
+    border-top: 2px dashed #0066cc;
+    width: 60%;
+    margin: 0 auto 20px;
+    opacity: 0.3;
 }

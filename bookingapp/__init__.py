@@ -7,3 +7,4 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.secret_key = 'super_secret_key'
 
 db = SQLAlchemy(app)
+

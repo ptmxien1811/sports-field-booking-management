@@ -13,25 +13,27 @@ import datetime as dt
 # ===== HOME =====
 @app.route("/")
 def home():
-    # now = datetime.datetime.now().strftime("Tuesday, %d/%m/%Y %H:%M")
-    products  = Product.query.filter_by(active=True).all()
-    username  = session.get("username")
-    user_id   = session.get("user_id")
-    bookings  = get_bookings_by_user(user_id)  if user_id else []
-    favorites = get_favorites_by_user(user_id) if user_id else []
+    products = Product.query.filter_by(active=True).all()
+
+    user_id = session.get("user_id")
+    username = session.get("username")
+
+    bookings = []
+    favorites = []
+    favorite_ids = []
 
     if user_id:
         bookings = get_bookings_by_user(user_id)
         favorites = get_favorites_by_user(user_id)
 
+        favorite_ids = [f.product_id for f in favorites]
 
     return render_template("index.html",
-                           # current_time=now,
                            products=products,
                            bookings=bookings,
                            favorites=favorites,
+                           favorite_ids=favorite_ids,
                            username=username)
-
 
 # ===== AUTH =====
 @app.route("/login", methods=["GET", "POST"])
@@ -79,7 +81,7 @@ def register():
 @app.route("/venue/<int:id>")
 def venue_detail(id):
     product = get_product_by_id(id)
-    return render_template("venue_detail.html", product=product)
+    return render_template("venue_detail.html", product=product,username=session.get("username"))
 
 
 # ===== API: LẤY SLOTS THEO NGÀY =====
@@ -127,30 +129,15 @@ def api_book():
         "booking_id": b.id,
         "msg":        f"Đặt sân thành công! Mã đặt: #{b.id}"
     })
-
-
-# ===== API: HỦY SÂN =====
-# @app.route("/api/cancel/<int:booking_id>", methods=["POST"])
-# def api_cancel(booking_id):
-#     if not session.get("user_id"):
-#         return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
-#
-#     ok = cancel_booking_by_id(booking_id, session["user_id"])
-#     if ok:
-#         return jsonify({"ok": True})
-#     return jsonify({"ok": False, "msg": "Không tìm thấy booking"}), 404
-
-
 # ===== API: TOGGLE FAVORITE =====
 @app.route("/api/favorite/<int:product_id>", methods=["POST"])
 def api_favorite(product_id):
-    if not session.get("user_id"):
+    user_id = session.get("user_id")
+    if not user_id:
         return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
 
-    added = toggle_favorite(session["user_id"], product_id)
+    added = toggle_favorite(user_id, product_id)
     return jsonify({"ok": True, "added": added})
-
-
 # ===== API: GỬI ĐÁNH GIÁ =====
 @app.route("/api/review/<int:product_id>", methods=["POST"])
 def api_review(product_id):
@@ -176,7 +163,7 @@ def api_review(product_id):
 
 
 # ===== CANCEL BOOKING (form POST từ index.html) =====
-@app.route("/cancel-booking/<int:id>", methods=["POST"])
+@app.route("/api/cancel-booking/<int:id>", methods=["POST"])
 def cancel_booking_final(id):
     booking = Booking.query.get(id)
     user_id = session.get("user_id")
@@ -186,7 +173,7 @@ def cancel_booking_final(id):
         return redirect(url_for("home", _anchor="booked"))
 
         # GIẢ LẬP GIỜ TEST: 7:30 sáng ngày 11/4
-    now_time = datetime(2026, 4, 12, 7, 30)
+    now_time = datetime(2026, 4, 1, 7, 30)
 
     #đã qua giờ kết thúc
     if now_time > booking.end_time:
@@ -210,21 +197,22 @@ def cancel_booking_final(id):
     return redirect(url_for("home", _anchor="booked"))
 @app.route("/favorites")
 def favorites():
-    return render_template("favorites.html")
+    return render_template("favorites.html",username=session.get('username'))
 
 @app.route("/explore")
 def explore():
-    return render_template("explore.html")
+    return render_template("explore.html",username=session.get('username'))
 
 @app.route("/featured")
 def featured():
     featured_products = (Product.query.filter_by(active=True)
                          .order_by(Product.price.desc()).limit(6).all())
-    return render_template("featured.html", products=featured_products)
+    return render_template("featured.html", products=featured_products,username=session.get('username'))
 
 @app.route("/account")
 def account():
     return render_template("account.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

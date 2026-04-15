@@ -33,11 +33,18 @@ main {
 }
 
 
+div.container
+{
+    margin-left: 10px;
+    margin-right: 10px;
+    padding-right: 0px;
+
+}
 /* Container của nút đăng nhập/đăng kí */
 .auth {
     display: flex;
     gap: 10px;              /* khoảng cách giữa các nút */
-    margin-right: 60px;     /* nới vào trong, cách mép phải */
+    margin-right: 0px;     /* nới vào trong, cách mép phải */
 }
 
 /* Nút đăng nhập/đăng kí */
@@ -141,7 +148,8 @@ main {
 #venues.active {
     display: flex;
     flex-wrap: wrap;
-    gap: 20px;
+    gap: 30px;
+
 }
 /* Danh sách sân */
 .venues {

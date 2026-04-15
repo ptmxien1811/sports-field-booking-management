@@ -1,15 +1,25 @@
-// TAB chuyển nội dung
+
+document.addEventListener("DOMContentLoaded", () => {
     const tabs = document.querySelectorAll(".nav-tabs a");
     const contents = document.querySelectorAll(".tab-content");
 
     tabs.forEach(tab => {
         tab.addEventListener("click", (e) => {
             e.preventDefault();
+
+            // Xóa active ở tất cả các tab và nội dung
             tabs.forEach(t => t.classList.remove("active"));
-            tab.classList.add("active");
             contents.forEach(c => c.classList.remove("active"));
-            const target = tab.dataset.target;
+
+            // Thêm active cho tab vừa click
+            tab.classList.add("active");
+
+            // Hiển thị nội dung tương ứng
+            const target = tab.getAttribute("data-target"); // Dùng getAttribute cho chắc chắn
             const el = document.getElementById(target);
-            if (el) el.classList.add("active");
+            if (el) {
+                el.classList.add("active");
+            }
         });
     });
+});

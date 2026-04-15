@@ -3,25 +3,12 @@
 {% block title %}Trang chủ{% endblock %}
 
 {% block content %}
-<header class="top-bar">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <div class="date-time"> Welcome to Sport Field Booking  </div>
-    <div class="auth">
-        {% if username %}
-            <span>Xin chào, {{ username }}</span>
-            <a href="{{ url_for('logout') }}">Đăng xuất</a>
-        {% else %}
-            <a href="{{ url_for('login') }}">Đăng nhập</a>
-            <a href="{{ url_for('register') }}">Đăng kí</a>
-        {% endif %}
-    </div>
-</header>
+
 
 <section class="search-nav">
     <!-- Thanh tìm kiếm -->
     <div class="search-box">
         <input type="text" id="search-input" placeholder="Tìm kiếm sân thể thao...">
-        <button class="filter-btn" id="filter-btn">🔍</button>
         <button class="search-btn" id="search-btn">Tìm kiếm</button>
         <ul id="suggestions" class="suggestions"></ul>
     </div>
@@ -35,22 +22,30 @@
 </section>
 
 <!-- Nội dung các tab -->
+
 <section id="venues" class="venues tab-content active">
     {% for product in products %}
-    <div class="venue-card">
-        <img src="{{ url_for('static', filename='image/' + product.image) }}" alt="{{ product.name }}">
+    <div class="venue-card" style="position: relative;">
+        <img src="{{ url_for('static', filename='image/' ~ product.image) }}" alt="{{ product.name }}">
         <h3>{{ product.name }}</h3>
-        <p>Địa chỉ: {{ product.address }}</p>
-        <p>SĐT: {{ product.phone }}</p>
-        <p>Giá: {{ product.price }}đ</p>
+        <p>Địa chỉ: {{ product.category.address }}</p>
+        <p>SĐT: {{ product.category.phone }}</p>
+        <p>Giá: {{ "{:,.0f}".format(product.price) }}đ</p>
+
         <a href="{{ url_for('venue_detail', id=product.id) }}">
             <button class="book-btn">ĐẶT LỊCH</button>
         </a>
-        <span class="fav-btn">❤️</span>
+
+        <span class="fav-btn" onclick="toggleHeart(this, {{ product.id }})">
+        {% if product.id in favorite_ids %}
+            <i class="fa-solid fa-heart text-danger"></i>
+        {% else %}
+            <i class="fa-regular fa-heart"></i>
+        {% endif %}
+        </span>
     </div>
     {% endfor %}
 </section>
-
 <section id="booked" class="tab-content">
     <h2>Sân đã đặt</h2>
 
@@ -63,43 +58,53 @@
                          alt="{{ b.product.name }}">
 
                     <h3>{{ b.product.name }}</h3>
-                    <p>Địa chỉ: {{ b.product.address }}</p>
-                    <p>SĐT: {{ b.product.phone }}</p>
+                    <p>Địa chỉ: {{ b.product.category.address }}</p>
+                    <p>SĐT: {{ b.product.category.phone }}</p>
                     <p>Thời gian: {{ b.start_time }} - {{ b.end_time }}</p>
                     <p>Trạng thái: {{ b.status }}</p>
 
-                    <form method="post" action="/cancel-booking/{{ b.id }}">
+                    <form method="post" action="/api/cancel-booking/{{ b.id }}">
                         <button class="cancel-btn">HỦY SÂN</button>
                     </form>
                 </div>
             {% endfor %}
         </div>
-    {% else %}
-        <p>Bạn chưa đặt sân nào</p>
+     {% else %}
+        <div class="alert alert-info">Bạn chưa có sân nào trong danh sách sân đã đặt.</div>
     {% endif %}
 </section>
 
 <section id="favorites" class="tab-content">
-    <h2>Sân yêu thích</h2>
+    <h2 class="mb-4">Sân yêu thích</h2>
 
     {% if favorites %}
-        <div class="favorite-list">
+        <div class="favorite-list d-flex flex-wrap gap-3">
             {% for f in favorites %}
                 <div class="venue-card">
-                    <img src="{{ url_for('static', filename='image/' + f.product.image) }}">
+                    <img src="{{ url_for('static', filename='image/' ~ f.product.image) }}" alt="{{ f.product.name }}">
+
                     <h3>{{ f.product.name }}</h3>
-                    <p>Địa chỉ: {{ f.product.address }}</p>
-                    <p>SĐT: {{ f.product.phone }}</p>
-                    <p>Giá: {{ f.product.price }}đ</p>
-                    <button class="book-btn">ĐẶT LỊCH</button>
-                    <span class="fav-btn">❤️</span>
+
+                    <p>Địa chỉ: {{ f.product.category.address }}</p>
+                    <p>SĐT: {{ f.product.category.phone }}</p>
+                    <p>Giá: {{ "{:,.0f}".format(f.product.price) }}đ</p>
+
+                    <a href="{{ url_for('venue_detail', id=f.product.id) }}">
+                        <button class="book-btn">ĐẶT LỊCH</button>
+                    </a>
+
+                    <span class="fav-btn"
+                          style="cursor: pointer; font-size: 1.5rem;"
+                          data-id="{{ f.product.id }}"
+                          onclick="toggleHeart(this, {{ f.product.id }})">
+                        <i class="fa-solid fa-heart text-danger"></i>
+                    </span>
                 </div>
             {% endfor %}
         </div>
     {% else %}
-        <p>Chưa có sân yêu thích</p>
+        <div class="alert alert-info">Bạn chưa có sân nào trong danh sách yêu thích.</div>
     {% endif %}
 </section>
 {% endblock %}
 
-{% include 'layout/footer.html' %}

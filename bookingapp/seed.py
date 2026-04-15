@@ -226,14 +226,5 @@ if __name__ == "__main__":
             ))
         db.session.commit()
 
-        # ===== FAVORITES =====
-        fav_pairs = set()
-        for _ in range(30):
-            u = random.choice(users)
-            p = random.choice(all_products)
-            if (u.id, p.id) not in fav_pairs:
-                fav_pairs.add((u.id, p.id))
-                db.session.add(Favorite(user_id=u.id, product_id=p.id))
-        db.session.commit()
 
         print("✅ Seed xong! Tất cả dữ liệu đã được thêm thành công.")

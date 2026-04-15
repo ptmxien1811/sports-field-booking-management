@@ -35,34 +35,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const savedTab = localStorage.getItem("currentTab") || "venues";
     activateTab(savedTab);
 
-
-    // === 3. XỬ LÝ TƯƠNG TÁC NÚT (Đặt sân & Yêu thích) ===
-    // document.querySelectorAll(".book-btn").forEach(btn => {
-    //     btn.addEventListener("click", () => {
-    //         alert("Bạn đã chọn đặt lịch thành công!");
-    //     });
-    // });
-
-    // Toggle trái tim yêu thích
-    document.querySelectorAll(".fav-btn").forEach(btn => {
-        btn.addEventListener("click", () => {
-            btn.classList.toggle("active");
-            const favList = document.querySelector("#fav-list");
-            const card = btn.closest(".venue-card").cloneNode(true);
-            const name = card.querySelector("h3").textContent;
-
-            if (btn.classList.contains("active")) {
-                favList.appendChild(card);
-            } else {
-                document.querySelectorAll("#fav-list .venue-card").forEach(c => {
-                    if (c.querySelector("h3").textContent === name) c.remove();
-                });
-            }
-        });
-    });
-
-
-
     // === 4. TÌM KIẾM + GỢI Ý ===
     const venues = [
         "Sân bóng đá mini 7 người", "Sân tennis tiêu chuẩn", "Hồ bơi 25m",
@@ -386,4 +358,33 @@ document.addEventListener('DOMContentLoaded', () => {
     setRating(5);
 });
 
-//Huy san
+//them vao ds san yeu thich
+function toggleHeart(el, productId) {
+    fetch(`/api/favorite/${productId}`, { method: 'POST' })
+    .then(res => {
+        if (res.status === 401) return alert("Bạn cần đăng nhập!");
+        return res.json();
+    })
+    .then(data => {
+        if (data.ok) {
+            // Tìm icon <i> bên trong thẻ <span> vừa nhấn
+            const icon = el.querySelector('i');
+
+            if (data.added) {
+                // Flask báo đã thêm -> Đổi sang tim đỏ đặc
+                icon.classList.remove('fa-regular');
+                icon.classList.add('fa-solid', 'text-danger');
+            } else {
+                // Flask báo đã xóa -> Đổi về tim trắng rỗng
+                icon.classList.remove('fa-solid', 'text-danger');
+                icon.classList.add('fa-regular');
+
+                // Nếu đang đứng ở tab Yêu thích thì xóa luôn cái card này
+                if (el.closest('#favorites')) {
+                    el.closest('.venue-card').remove();
+                }
+            }
+        }
+    })
+    .catch(err => console.error("Lỗi:", err));
+}

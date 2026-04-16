@@ -3,6 +3,7 @@ from bookingapp import db, app
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
+import re
 
 
 class BaseModel(db.Model):
@@ -26,9 +27,20 @@ class Category(BaseModel):
 class User(BaseModel):
     __tablename__ = 'user'
 
-    username = Column(String(80), unique=True, nullable=False)
-    password = Column(String(255), nullable=False)
-    avatar   = Column(String(200), default="default_avatar.png")
+    username     = Column(String(80),  unique=True, nullable=False)
+    password     = Column(String(255), nullable=True)          # nullable vì Google login không có password
+    email        = Column(String(120), unique=True, nullable=True)
+    phone        = Column(String(20),  unique=True, nullable=True)
+    avatar       = Column(String(200), default="default_avatar.png")
+
+    # Google OAuth
+    google_id    = Column(String(100), unique=True, nullable=True)
+    google_email = Column(String(120), nullable=True)
+
+    # Loại tài khoản: 'local' | 'google' | 'email' | 'phone'
+    auth_type    = Column(String(20),  default='local')
+
+    created_at   = Column(DateTime, default=datetime.now)
 
     bookings  = relationship("Booking",  back_populates="user")
     favorites = relationship("Favorite", back_populates="user")
@@ -38,9 +50,49 @@ class User(BaseModel):
         self.password = generate_password_hash(password)
 
     def check_password(self, password):
+        if not self.password:
+            return False
         return check_password_hash(self.password, password)
 
+    @staticmethod
+    def validate_password(password):
+        """
+        Ràng buộc mật khẩu:
+        - Ít nhất 8 ký tự
+        - Có chữ hoa
+        - Có chữ thường
+        - Có số
+        - Có ký tự đặc biệt
+        Trả về (ok: bool, message: str)
+        """
+        errors = []
+        if len(password) < 8:
+            errors.append("ít nhất 8 ký tự")
+        if not re.search(r'[A-Z]', password):
+            errors.append("ít nhất 1 chữ HOA")
+        if not re.search(r'[a-z]', password):
+            errors.append("ít nhất 1 chữ thường")
+        if not re.search(r'\d', password):
+            errors.append("ít nhất 1 chữ số")
+        if not re.search(r'[!@#$%^&*()_+\-=\[\]{};\':"\\|,.<>\/?`~]', password):
+            errors.append("ít nhất 1 ký tự đặc biệt (!@#$%...)")
+        if errors:
+            return False, "Mật khẩu cần có: " + ", ".join(errors)
+        return True, "OK"
 
+    @staticmethod
+    def validate_email(email):
+        pattern = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+        return bool(re.match(pattern, email))
+
+    @staticmethod
+    def validate_phone(phone):
+        # Số điện thoại VN: 10 số, bắt đầu bằng 0
+        pattern = r'^(0[3-9][0-9]{8})$'
+        return bool(re.match(pattern, phone))
+
+
+# ================= AMENITY / TIMESLOT / PRODUCT =================
 class Amenity(BaseModel):
     __tablename__ = 'amenity'
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
@@ -52,8 +104,8 @@ class Amenity(BaseModel):
 class TimeSlot(BaseModel):
     __tablename__ = 'time_slot'
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    period     = Column(String(20))   # morning / afternoon / evening
-    label      = Column(String(20))   # "08:00 - 09:00"
+    period     = Column(String(20))
+    label      = Column(String(20))
     product    = relationship("Product", back_populates="time_slots")
 
 
@@ -89,7 +141,7 @@ class Booking(BaseModel):
     __tablename__ = 'booking'
     user_id    = Column(Integer, ForeignKey('user.id'),     nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
-    slot_label = Column(String(20))          # "08:00 - 09:00"
+    slot_label = Column(String(20))
     date       = Column(DateTime, nullable=False)
     start_time = Column(DateTime, nullable=False)
     end_time   = Column(DateTime, nullable=False)
@@ -109,6 +161,7 @@ class Favorite(BaseModel):
     product = relationship("Product", back_populates="favorites")
 
 
+# ================= REVIEW =================
 class Review(BaseModel):
     __tablename__ = 'review'
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)

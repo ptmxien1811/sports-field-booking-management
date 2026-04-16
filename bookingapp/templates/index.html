@@ -6,12 +6,16 @@
 
 
 <section class="search-nav">
-    <!-- Thanh tìm kiếm -->
+    <!-- Thanh tìm kiếm + nút lọc-->
     <div class="search-box">
+        <button class="filter-btn" type="button" data-bs-toggle="modal" data-bs-target="#filterModal">
+            <i class="fa-solid fa-filter"></i>
+        </button>
         <input type="text" id="search-input" placeholder="Tìm kiếm sân thể thao...">
         <button class="search-btn" id="search-btn">Tìm kiếm</button>
         <ul id="suggestions" class="suggestions"></ul>
     </div>
+
 
     <!-- Thanh menu tab -->
     <ul class="nav-tabs">
@@ -20,7 +24,6 @@
         <li><a href="#" data-target="favorites">Yêu thích</a></li>
     </ul>
 </section>
-
 <!-- Nội dung các tab -->
 
 <section id="venues" class="venues tab-content active">
@@ -30,7 +33,13 @@
         <h3>{{ product.name }}</h3>
         <p>Địa chỉ: {{ product.category.address }}</p>
         <p>SĐT: {{ product.category.phone }}</p>
-        <p>Giá: {{ "{:,.0f}".format(product.price) }}đ</p>
+        <p class="product-price">Giá: {{ "{:,.0f}".format(product.price) }}đ</p>
+
+        <div class="hidden-amenities" style="display: none;">
+        {% for a in product.amenities %}
+            {{ a.label }}
+        {% endfor %}
+        </div>
 
         <a href="{{ url_for('venue_detail', id=product.id) }}">
             <button class="book-btn">ĐẶT LỊCH</button>
@@ -47,8 +56,14 @@
     {% endfor %}
 </section>
 <section id="booked" class="tab-content">
-    <h2>Sân đã đặt</h2>
-
+    <div class="container mt-3">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+    </div>
     {% if bookings %}
         <div class="booked-list">
             {% for b in bookings %}
@@ -60,8 +75,8 @@
                     <h3>{{ b.product.name }}</h3>
                     <p>Địa chỉ: {{ b.product.category.address }}</p>
                     <p>SĐT: {{ b.product.category.phone }}</p>
+                    <p>Giá: {{ "{:,.0f}".format(b.product.price) }}đ</p>
                     <p>Thời gian: {{ b.start_time }} - {{ b.end_time }}</p>
-                    <p>Trạng thái: {{ b.status }}</p>
 
                     <form method="post" action="/api/cancel-booking/{{ b.id }}">
                         <button class="cancel-btn">HỦY SÂN</button>
@@ -75,7 +90,6 @@
 </section>
 
 <section id="favorites" class="tab-content">
-    <h2 class="mb-4">Sân yêu thích</h2>
 
     {% if favorites %}
         <div class="favorite-list d-flex flex-wrap gap-3">
@@ -105,6 +119,67 @@
     {% else %}
         <div class="alert alert-info">Bạn chưa có sân nào trong danh sách yêu thích.</div>
     {% endif %}
+</section>
+<section>
+    <div class="modal fade" id="filterModal" tabindex="-1" aria-labelledby="filterModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="filterModalLabel">🔍 Bộ lọc nâng cao</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="advanced-filter-form">
+              <div class="mb-4">
+                <h6 class="fw-bold">🏸 Loại sân</h6>
+                <div class="d-flex flex-wrap gap-2">
+                  {% set cats = ["Sân bóng đá", "Sân tennis", "Hồ bơi", "Sân cầu lông", "Sân bóng rổ", "Sân bóng chuyền", "Sân bóng bàn", "Sân pickleball"] %}
+                  {% for cat in cats %}
+                  <input type="checkbox" class="btn-check filter-category" id="cat-{{ loop.index }}" value="{{ cat }}">
+                  <label class="btn btn-outline-primary btn-sm rounded-pill" for="cat-{{ loop.index }}">{{ cat }}</label>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <h6 class="fw-bold">💰 Giá thuê (VNĐ/giờ)</h6>
+                <div class="form-check">
+                  <input class="form-check-input filter-price" type="radio" name="priceRange" id="price1" value="0-199999">
+                  <label class="form-check-label" for="price1">Dưới 200,000đ</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input filter-price" type="radio" name="priceRange" id="price2" value="200000-500000">
+                  <label class="form-check-label" for="price2">Từ 200,000đ - 500,000đ</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input filter-price" type="radio" name="priceRange" id="price3" value="500001-9999999">
+                  <label class="form-check-label" for="price3">Trên 500,000đ</label>
+                </div>
+              </div>
+
+              <div class="mb-4">
+                <h6 class="fw-bold">✨ Tiện ích đi kèm</h6>
+                <div class="row">
+                  {% set amens = ["Gửi xe miễn phí", "Điều hòa", "Phòng tắm", "Wifi", "Căng tin", "Cho thuê vợt"] %}
+                  {% for amen in amens %}
+                  <div class="col-6 col-md-4">
+                    <div class="form-check">
+                      <input class="form-check-input filter-amenity" type="checkbox" value="{{ amen }}" id="amen-{{ loop.index }}">
+                      <label class="form-check-label" for="amen-{{ loop.index }}">{{ amen }}</label>
+                    </div>
+                  </div>
+                  {% endfor %}
+                </div>
+              </div>
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="resetFilters()">Xóa bộ lọc</button>
+            <button type="button" class="btn btn-primary" onclick="applyAdvancedFilter()">Áp dụng</button>
+          </div>
+        </div>
+      </div>
+    </div>
 </section>
 {% endblock %}
 

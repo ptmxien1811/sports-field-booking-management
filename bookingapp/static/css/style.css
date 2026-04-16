@@ -144,6 +144,9 @@ div.container
     display: block;
 }
 
+/*???????/
+
+
 /* CHỈ venues mới dùng flex */
 #venues.active {
     display: flex;
@@ -163,7 +166,7 @@ div.container
     border: 1px solid #0066cc;
     border-radius: 8px;
     width: calc(33.333% - 20px);
-    padding: 1px;
+    padding: 4px;
     text-align: left;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
     position: relative;
@@ -408,6 +411,8 @@ form{
 /* ===== CONTENT ===== */
 .main-content {
     padding-top: 70px;
-    padding-bottom: 80px;
+    padding-bottom: 70px;
 }
+
+
 

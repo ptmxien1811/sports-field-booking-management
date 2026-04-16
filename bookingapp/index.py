@@ -118,7 +118,6 @@ def api_book():
         product_id=product_id,
         slot_label=slot_label,
         date=datetime.combine(sel_date, datetime.min.time()),
-        status="confirmed"
     ).first()
     if exists:
         return jsonify({"ok": False, "msg": "Khung giờ này đã được đặt"}), 400
@@ -169,31 +168,31 @@ def cancel_booking_final(id):
     user_id = session.get("user_id")
 
     if not booking or booking.user_id != user_id:
-        flash("Không tìm thấy đơn hàng hoặc bạn không có quyền!", "danger")
+        flash("Không tìm thấy hoặc bạn không có quyền!", "danger")
         return redirect(url_for("home", _anchor="booked"))
 
         # GIẢ LẬP GIỜ TEST: 7:30 sáng ngày 11/4
-    now_time = datetime(2026, 4, 1, 7, 30)
+    now_time = datetime(2026, 3, 1, 8, 30)
 
     #đã qua giờ kết thúc
     if now_time > booking.end_time:
-        flash("Sân này đã thi đấu xong , không thể hủy!", "info")
+        flash("Đã sử dụng , không thể hủy!", "info")
         return redirect(url_for("home", _anchor="booked"))
 
     #đang trong giờ đá
     if booking.start_time <= now_time <= booking.end_time:
-        flash("Sân đang trong giờ sử dụng, bạn không thể hủy lúc này!", "danger")
+        flash("Đang trong giờ sử dụng, bạn không thể hủy lúc này!", "danger")
         return redirect(url_for("home", _anchor="booked"))
 
     #< 2 tiếng tới giờ đá
     if now_time < booking.start_time:
         if booking.start_time - now_time < timedelta(hours=2):
-            flash("Sân sắp đá, không được hủy!", "warning")
+            flash("Sắp tới giờ sử dụng, không được hủy!", "warning")
             return redirect(url_for("home", _anchor="booked"))
     db.session.delete(booking)
     db.session.commit()
 
-    flash("Hệ thống xác nhận: Đã hủy sân thành công!", "success")
+    flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
     return redirect(url_for("home", _anchor="booked"))
 @app.route("/favorites")
 def favorites():

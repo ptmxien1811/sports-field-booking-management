@@ -2,52 +2,234 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <title>Đăng nhập</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng nhập – Sport Field Booking</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}">
+
 </head>
 <body>
-    <!-- Header xanh -->
-    <header class="top-bar">
-        <div class="date-time">Welcome to Sport Field Booking</div>
-    </header>
 
-    <!-- Form đăng nhập -->
-    <main>
-        <section class="form-section">
-            <h2>Đăng nhập</h2>
-            <form method="POST" action="/login">
-                <label for="username">Tên đăng nhập:</label>
-                <input type="text" id="username" name="username" required>
+<!-- ── TOP BAR ── -->
+<header class="top-bar">
+    <a href="/" class="logo">⚽ Sport Field Booking</a>
+    <a href="/" class="back-link">
+        <i class="fa fa-arrow-left"></i> Trang chủ
+    </a>
+</header>
 
-                <label for="password">Mật khẩu:</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" name="password" required>
+<!-- ── FLASH MESSAGES ── -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <ul class="flash-list">
+            {% for cat, msg in messages %}
+                <li class="{{ cat }}">{{ msg }}</li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+{% endwith %}
 
-                </div>
+<!-- ── MAIN ── -->
+<main>
+    <div class="auth-card">
 
-                <button type="submit">Đăng nhập</button>
-            </form>
-            <div class="extra-links">
-                <a href="/forgot-password">Quên mật khẩu?</a>
-                <a href="/register">Đăng kí</a>
+        <!-- Card Header -->
+        <div class="card-head">
+            <h1>Đăng nhập</h1>
+            <p>Chào mừng trở lại! Chọn phương thức đăng nhập.</p>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="tab-username" onclick="switchTab(this)">
+                    <i class="fa fa-user"></i> Tài khoản
+                </button>
+                <button class="tab-btn" data-tab="tab-email" onclick="switchTab(this)">
+                    <i class="fa fa-envelope"></i> Email
+                </button>
+                <button class="tab-btn" data-tab="tab-phone" onclick="switchTab(this)">
+                    <i class="fa fa-phone"></i> SĐT
+                </button>
             </div>
-        </section>
-    </main>
+        </div>
 
-    <!-- Footer xanh -->
-    <footer class="bottom-bar">
-        <p>© 2026 Sports Booking</p>
-    </footer>
+        <!-- Card Body -->
+        <div class="card-body">
 
-    <script>
-        function togglePassword() {
-            const pwd = document.getElementById("password");
-            if (pwd.type === "password") {
-                pwd.type = "text";
-            } else {
-                pwd.type = "password";
-            }
-        }
-    </script>
+            <!-- Nút Google -->
+            <a href="/auth/google" class="btn-google">
+                <svg viewBox="0 0 48 48" aria-hidden="true">
+                    <path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.2l6.7-6.7C35.7 2.2 30.2 0 24 0 14.8 0 6.9 5.4 3 13.3l7.8 6.1C12.5 13.2 17.8 9.5 24 9.5z"/>
+                    <path fill="#4285F4" d="M46.6 24.5c0-1.6-.1-3.1-.4-4.5H24v8.5h12.7c-.5 2.9-2.2 5.4-4.7 7l7.2 5.6c4.2-3.9 6.4-9.6 6.4-16.6z"/>
+                    <path fill="#FBBC05" d="M10.8 28.6A14.7 14.7 0 0 1 9.5 24c0-1.6.3-3.2.8-4.6L2.5 13.3A24 24 0 0 0 0 24c0 3.8.9 7.4 2.5 10.7l8.3-6.1z"/>
+                    <path fill="#34A853" d="M24 48c6.1 0 11.3-2 15.1-5.4l-7.2-5.6c-2 1.4-4.6 2.2-7.9 2.2-6.2 0-11.5-4.2-13.4-9.9l-7.8 6.1C6.9 42.6 14.8 48 24 48z"/>
+                </svg>
+                Tiếp tục với Google
+            </a>
+
+            <div class="divider">hoặc</div>
+
+            <!-- ── TAB: TÀI KHOẢN ── -->
+            <div id="tab-username" class="panel active">
+
+                {% if error and request.path == '/login' %}
+                <div class="error-box">
+                    <i class="fa fa-circle-exclamation"></i> {{ error }}
+                </div>
+                {% endif %}
+
+                <form method="POST" action="/login">
+                    <div class="form-group">
+                        <label for="login-username">Tên đăng nhập</label>
+                        <div class="input-wrap">
+                            <i class="fa fa-user prefix-icon" aria-hidden="true"></i>
+                            <input
+                                type="text"
+                                id="login-username"
+                                name="username"
+                                placeholder="Nhập tên đăng nhập"
+                                autocomplete="username"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pwd-u">Mật khẩu</label>
+                        <div class="input-wrap">
+                            <i class="fa fa-lock prefix-icon" aria-hidden="true"></i>
+                            <input
+                                type="password"
+                                id="pwd-u"
+                                name="password"
+                                placeholder="Nhập mật khẩu"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button
+                                type="button"
+                                class="toggle-eye"
+                                onclick="togglePwd('pwd-u', this)"
+                                aria-label="Hiện/ẩn mật khẩu"
+                            >
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Đăng nhập</button>
+                </form>
+
+                <div class="link-row">
+                    Chưa có tài khoản? <a href="/register">Đăng ký ngay</a>
+                </div>
+            </div>
+
+            <!-- ── TAB: EMAIL ── -->
+            <div id="tab-email" class="panel">
+                <form method="POST" action="/login/email">
+                    <div class="form-group">
+                        <label for="login-email">Email</label>
+                        <div class="input-wrap">
+                            <i class="fa fa-envelope prefix-icon" aria-hidden="true"></i>
+                            <input
+                                type="email"
+                                id="login-email"
+                                name="email"
+                                placeholder="example@gmail.com"
+                                autocomplete="email"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pwd-e">Mật khẩu</label>
+                        <div class="input-wrap">
+                            <i class="fa fa-lock prefix-icon" aria-hidden="true"></i>
+                            <input
+                                type="password"
+                                id="pwd-e"
+                                name="password"
+                                placeholder="Nhập mật khẩu"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button
+                                type="button"
+                                class="toggle-eye"
+                                onclick="togglePwd('pwd-e', this)"
+                                aria-label="Hiện/ẩn mật khẩu"
+                            >
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Đăng nhập bằng Email</button>
+                </form>
+
+                <div class="link-row">
+                    Chưa có tài khoản? <a href="/register/email">Đăng ký bằng Email</a>
+                </div>
+            </div>
+
+            <!-- ── TAB: SĐT ── -->
+            <div id="tab-phone" class="panel">
+                <form method="POST" action="/login/phone">
+                    <div class="form-group">
+                        <label for="login-phone">Số điện thoại</label>
+                        <div class="input-wrap">
+                            <i class="fa fa-phone prefix-icon" aria-hidden="true"></i>
+                            <input
+                                type="tel"
+                                id="login-phone"
+                                name="phone"
+                                placeholder="0912345678"
+                                pattern="0[3-9][0-9]{8}"
+                                autocomplete="tel"
+                                required
+                            >
+                        </div>
+                        <p class="hint">Số VN 10 chữ số, bắt đầu bằng 0</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pwd-p">Mật khẩu</label>
+                        <div class="input-wrap">
+                            <i class="fa fa-lock prefix-icon" aria-hidden="true"></i>
+                            <input
+                                type="password"
+                                id="pwd-p"
+                                name="password"
+                                placeholder="Nhập mật khẩu"
+                                autocomplete="current-password"
+                                required
+                            >
+                            <button
+                                type="button"
+                                class="toggle-eye"
+                                onclick="togglePwd('pwd-p', this)"
+                                aria-label="Hiện/ẩn mật khẩu"
+                            >
+                                <i class="fa fa-eye"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Đăng nhập bằng SĐT</button>
+                </form>
+
+                <div class="link-row">
+                    Chưa có tài khoản? <a href="/register/phone">Đăng ký bằng SĐT</a>
+                </div>
+            </div>
+
+        </div><!-- /card-body -->
+    </div><!-- /auth-card -->
+</main>
+
+<!-- ── FOOTER ── -->
+<footer>© 2026 Sports Booking – All rights reserved</footer>
+<script src="{{ url_for('static', filename='js/login.js') }}"></script>
+
 </body>
 </html>

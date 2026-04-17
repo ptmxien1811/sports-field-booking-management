@@ -3,7 +3,8 @@ from bookingapp import app, db
 from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,
                              get_slots_for_product_date, create_booking,
                              cancel_booking_by_id, toggle_favorite,
-                             add_review, get_product_by_id)
+                             add_review, get_product_by_id,
+                             has_booked_product, has_reviewed_product)
 from bookingapp.models import Product, User, Booking
 from bookingapp import admin
 from datetime import datetime, timedelta, date as date_type
@@ -12,7 +13,6 @@ import requests as http_requests
 import os
 
 # ===== CẤU HÌNH GOOGLE OAUTH =====
-# Đặt các biến này trong .env hoặc config của bạn
 GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID",     "YOUR_GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.environ.get("GOOGLE_CLIENT_SECRET", "YOUR_GOOGLE_CLIENT_SECRET")
 GOOGLE_REDIRECT_URI  = os.environ.get("GOOGLE_REDIRECT_URI",  "http://localhost:5000/auth/google/callback")
@@ -25,11 +25,11 @@ GOOGLE_USER_URL  = "https://www.googleapis.com/oauth2/v3/userinfo"
 # ===== HOME =====
 @app.route("/")
 def home():
-    products = Product.query.filter_by(active=True).all()
-    user_id  = session.get("user_id")
-    username = session.get("username")
-    bookings = []
-    favorites = []
+    products     = Product.query.filter_by(active=True).all()
+    user_id      = session.get("user_id")
+    username     = session.get("username")
+    bookings     = []
+    favorites    = []
     favorite_ids = []
     if user_id:
         bookings     = get_bookings_by_user(user_id)
@@ -76,11 +76,9 @@ def register():
         email    = request.form.get("email", "").strip() or None
         phone    = request.form.get("phone", "").strip() or None
 
-        # Validate username
         if not username:
             return render_template("register.html", error="Vui lòng nhập tên đăng nhập")
 
-        # Validate password
         ok, msg = User.validate_password(password)
         if not ok:
             return render_template("register.html", error=msg)
@@ -91,14 +89,12 @@ def register():
         if User.query.filter_by(username=username).first():
             return render_template("register.html", error="Tên đăng nhập đã tồn tại")
 
-        # Validate email nếu có
         if email:
             if not User.validate_email(email):
                 return render_template("register.html", error="Email không hợp lệ")
             if User.query.filter_by(email=email).first():
                 return render_template("register.html", error="Email này đã được sử dụng")
 
-        # Validate phone nếu có
         if phone:
             if not User.validate_phone(phone):
                 return render_template("register.html", error="Số điện thoại không hợp lệ (cần 10 số, bắt đầu 0)")
@@ -121,19 +117,15 @@ def login_email():
     if request.method == "POST":
         email    = request.form.get("email", "").strip()
         password = request.form.get("password", "")
-
         if not User.validate_email(email):
             return render_template("login.html", error="Email không hợp lệ")
-
         user = User.query.filter_by(email=email).first()
         if not user or not user.check_password(password):
             return render_template("login.html", error="Email hoặc mật khẩu không đúng")
-
         session["user_id"]  = user.id
         session["username"] = user.username
         flash("Đăng nhập thành công!", "success")
         return redirect(url_for("home"))
-
     return render_template("login.html")
 
 
@@ -157,10 +149,8 @@ def register_email():
         if password != confirm:
             return render_template("register.html", error="Mật khẩu xác nhận không khớp")
 
-        # Tạo username từ email nếu không có
         if not username:
             username = email.split("@")[0]
-        # Đảm bảo username unique
         base = username
         i = 1
         while User.query.filter_by(username=username).first():
@@ -173,7 +163,6 @@ def register_email():
         db.session.commit()
         flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
         return redirect(url_for("home"))
-
     return render_template("register.html")
 
 
@@ -183,19 +172,15 @@ def login_phone():
     if request.method == "POST":
         phone    = request.form.get("phone", "").strip()
         password = request.form.get("password", "")
-
         if not User.validate_phone(phone):
             return render_template("login.html", error="Số điện thoại không hợp lệ")
-
         user = User.query.filter_by(phone=phone).first()
         if not user or not user.check_password(password):
             return render_template("login.html", error="Số điện thoại hoặc mật khẩu không đúng")
-
         session["user_id"]  = user.id
         session["username"] = user.username
         flash("Đăng nhập thành công!", "success")
         return redirect(url_for("home"))
-
     return render_template("login.html")
 
 
@@ -233,14 +218,12 @@ def register_phone():
         db.session.commit()
         flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
         return redirect(url_for("home"))
-
     return render_template("register.html")
 
 
 # ===== GOOGLE OAUTH =====
 @app.route("/auth/google")
 def google_login():
-    """Chuyển hướng người dùng tới Google để xác thực"""
     import urllib.parse
     params = {
         "client_id":     GOOGLE_CLIENT_ID,
@@ -255,13 +238,11 @@ def google_login():
 
 @app.route("/auth/google/callback")
 def google_callback():
-    """Google trả về code, đổi code lấy token rồi lấy thông tin user"""
     code = request.args.get("code")
     if not code:
         flash("Đăng nhập Google thất bại!", "danger")
         return redirect(url_for("login"))
 
-    # Đổi code lấy access token
     token_res = http_requests.post(GOOGLE_TOKEN_URL, data={
         "code":          code,
         "client_id":     GOOGLE_CLIENT_ID,
@@ -269,14 +250,13 @@ def google_callback():
         "redirect_uri":  GOOGLE_REDIRECT_URI,
         "grant_type":    "authorization_code",
     })
-    token_data = token_res.json()
+    token_data   = token_res.json()
     access_token = token_data.get("access_token")
 
     if not access_token:
         flash("Không lấy được token từ Google!", "danger")
         return redirect(url_for("login"))
 
-    # Lấy thông tin user từ Google
     user_res  = http_requests.get(GOOGLE_USER_URL,
                                    headers={"Authorization": f"Bearer {access_token}"})
     user_info = user_res.json()
@@ -285,38 +265,28 @@ def google_callback():
     google_email = user_info.get("email")
     google_name  = user_info.get("name", "")
 
-    # Tìm user đã có google_id này
     user = User.query.filter_by(google_id=google_id).first()
-
     if not user:
-        # Thử tìm theo email
         user = User.query.filter_by(email=google_email).first()
         if user:
-            # Liên kết tài khoản hiện có với Google
             user.google_id    = google_id
             user.google_email = google_email
             db.session.commit()
         else:
-            # Tạo tài khoản mới từ Google
             username = google_name.replace(" ", "") or f"user_{google_id[:6]}"
             base = username
             i = 1
             while User.query.filter_by(username=username).first():
                 username = f"{base}{i}"
                 i += 1
-
             user = User(
-                username=username,
-                email=google_email,
-                google_id=google_id,
-                google_email=google_email,
-                auth_type='google',
-                password=""      # Không có password vì dùng Google
+                username=username, email=google_email,
+                google_id=google_id, google_email=google_email,
+                auth_type='google', password=""
             )
             db.session.add(user)
             db.session.commit()
 
-    # Đăng nhập
     session["user_id"]  = user.id
     session["username"] = user.username
     flash(f"Chào mừng {user.username}! Đăng nhập Google thành công.", "success")
@@ -326,8 +296,20 @@ def google_callback():
 # ===== VENUE DETAIL =====
 @app.route("/venue/<int:id>")
 def venue_detail(id):
-    product = get_product_by_id(id)
-    return render_template("venue_detail.html", product=product, username=session.get("username"))
+    product     = get_product_by_id(id)
+    user_id     = session.get("user_id")
+    can_review  = False
+    has_reviewed = False
+    if user_id:
+        can_review   = has_booked_product(user_id, id)
+        has_reviewed = has_reviewed_product(user_id, id)
+    return render_template(
+        "venue_detail.html",
+        product      = product,
+        username     = session.get("username"),
+        can_review   = can_review,
+        has_reviewed = has_reviewed,
+    )
 
 
 # ===== API: LẤY SLOTS =====
@@ -338,32 +320,52 @@ def api_slots(product_id):
         sel_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except ValueError:
         sel_date = date_type.today()
+
+    # Trả về thêm thông tin về giới hạn đặt sân trong ngày của user
+    user_id       = session.get("user_id")
+    bookings_today = 0
+    if user_id:
+        day_start = datetime.combine(sel_date, datetime.min.time())
+        day_end   = day_start + timedelta(days=1)
+        bookings_today = Booking.query.filter(
+            Booking.user_id == user_id,
+            Booking.date    >= day_start,
+            Booking.date    <  day_end,
+            Booking.status  == "confirmed"
+        ).count()
+
     slots_data, available = get_slots_for_product_date(product_id, sel_date)
-    return jsonify({"slots": slots_data, "available": available})
+    return jsonify({
+        "slots":          slots_data,
+        "available":      available,
+        "bookings_today": bookings_today,   # số sân đã đặt hôm đó
+        "max_per_day":    3,
+    })
 
 
 # ===== API: ĐẶT SÂN =====
 @app.route("/api/book", methods=["POST"])
 def api_book():
+    # ── Ràng buộc 1: Phải đăng nhập ──────────────────────────────────────
     if not session.get("user_id"):
         return jsonify({"ok": False, "msg": "Vui lòng đăng nhập để đặt sân"}), 401
+
     data       = request.json
     product_id = data.get("product_id")
     slot_label = data.get("slot")
     date_str   = data.get("date")
+
     try:
         sel_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except Exception:
         return jsonify({"ok": False, "msg": "Ngày không hợp lệ"}), 400
-    exists = Booking.query.filter_by(
-        product_id=product_id,
-        slot_label=slot_label,
-        date=datetime.combine(sel_date, datetime.min.time()),
-    ).first()
-    if exists:
-        return jsonify({"ok": False, "msg": "Khung giờ này đã được đặt"}), 400
-    b = create_booking(session["user_id"], product_id, slot_label, sel_date)
-    return jsonify({"ok": True, "booking_id": b.id, "msg": f"Đặt sân thành công! Mã đặt: #{b.id}"})
+
+    b, err = create_booking(session["user_id"], product_id, slot_label, sel_date)
+    if err:
+        return jsonify({"ok": False, "msg": err}), 400
+
+    return jsonify({"ok": True, "booking_id": b.id,
+                    "msg": f"Đặt sân thành công! Mã đặt: #{b.id}"})
 
 
 # ===== API: TOGGLE FAVORITE =====
@@ -379,32 +381,59 @@ def api_favorite(product_id):
 # ===== API: GỬI ĐÁNH GIÁ =====
 @app.route("/api/review/<int:product_id>", methods=["POST"])
 def api_review(product_id):
+    # ── Phải đăng nhập ────────────────────────────────────────────────────
     if not session.get("user_id"):
         return jsonify({"ok": False, "msg": "Vui lòng đăng nhập để đánh giá"}), 401
+
     data    = request.json
     rating  = int(data.get("rating", 5))
     content = data.get("content", "").strip()
+
     if not content:
         return jsonify({"ok": False, "msg": "Vui lòng nhập nội dung đánh giá"}), 400
-    r = add_review(session["user_id"], product_id, rating, content)
+
+    r, err = add_review(session["user_id"], product_id, rating, content)
+    if err:
+        return jsonify({"ok": False, "msg": err}), 403
+
     return jsonify({
-        "ok": True, "author": session["username"],
-        "rating": r.rating, "stars": r.stars,
-        "content": r.content, "date_str": r.date_str,
+        "ok":      True,
+        "author":  session["username"],
+        "rating":  r.rating,
+        "stars":   r.stars,
+        "content": r.content,
+        "date_str": r.date_str,
+    })
+
+
+# ===== API: KIỂM TRA QUYỀN REVIEW =====
+@app.route("/api/can-review/<int:product_id>")
+def api_can_review(product_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"can_review": False, "has_reviewed": False, "reason": "not_logged_in"})
+    booked      = has_booked_product(user_id, product_id)
+    reviewed    = has_reviewed_product(user_id, product_id)
+    return jsonify({
+        "can_review":   booked and not reviewed,
+        "has_reviewed": reviewed,
+        "has_booked":   booked,
+        "reason":       "ok" if (booked and not reviewed)
+                        else ("already_reviewed" if reviewed else "not_booked")
     })
 
 
 # ===== CANCEL BOOKING =====
 @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
 def cancel_booking_final(id):
-    booking = Booking.query.get(id)
-    user_id = session.get("user_id")
+    booking  = Booking.query.get(id)
+    user_id  = session.get("user_id")
     if not booking or booking.user_id != user_id:
         flash("Không tìm thấy hoặc bạn không có quyền!", "danger")
         return redirect(url_for("home", _anchor="booked"))
-    now_time = datetime(2026, 4, 1, 7, 30)
+    now_time = datetime.now()
     if now_time > booking.end_time:
-        flash("Đã sử dụng , không thể hủy!", "info")
+        flash("Đã sử dụng, không thể hủy!", "info")
         return redirect(url_for("home", _anchor="booked"))
     if booking.start_time <= now_time <= booking.end_time:
         flash("Đang trong giờ sử dụng, bạn không thể hủy lúc này!", "danger")
@@ -415,7 +444,6 @@ def cancel_booking_final(id):
             return redirect(url_for("home", _anchor="booked"))
     db.session.delete(booking)
     db.session.commit()
-
     flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
     return redirect(url_for("home", _anchor="booked"))
 

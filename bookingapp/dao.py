@@ -1,7 +1,7 @@
 from bookingapp import db
 from bookingapp.models import Booking, User, Product, Category, Favorite, Review, TimeSlot
 from sqlalchemy.orm import joinedload
-from datetime import datetime
+from datetime import datetime, date as date_type, timedelta
 from sqlalchemy import func
 
 
@@ -36,23 +36,64 @@ def get_all_bookings():
 
 
 def create_booking(user_id, product_id, slot_label, date_obj):
-    """Tạo booking mới. date_obj là datetime.date"""
+    """
+    Tạo booking mới với đầy đủ ràng buộc:
+    1. Người dùng phải đăng nhập (kiểm tra ở route)
+    2. Không được đặt sân trong quá khứ
+    3. Khung giờ đặt tối thiểu 1 giờ (TimeSlot luôn là 1h)
+    4. Một người chỉ được đặt tối đa 3 sân/ngày
+    5. Không được đặt nếu đã có người đặt cùng khung giờ
+
+    Trả về (booking | None, error_message | None)
+    """
+    now = datetime.now()
     start_str, end_str = slot_label.split(" - ")
     start_time = datetime.combine(date_obj, datetime.strptime(start_str, "%H:%M").time())
     end_time   = datetime.combine(date_obj, datetime.strptime(end_str,   "%H:%M").time())
 
+    # ── Ràng buộc 2: Không đặt trong quá khứ ──────────────────────────────
+    if start_time <= now:
+        return None, "Không thể đặt sân trong quá khứ hoặc khung giờ đã qua."
+
+    # ── Ràng buộc 3: Khung giờ tối thiểu 1 giờ ────────────────────────────
+    duration_hours = (end_time - start_time).seconds / 3600
+    if duration_hours < 1:
+        return None, "Khung giờ đặt phải tối thiểu 1 giờ."
+
+    # ── Ràng buộc 4: Tối đa 3 sân/ngày ────────────────────────────────────
+    day_start = datetime.combine(date_obj, datetime.min.time())
+    day_end   = day_start + timedelta(days=1)
+    bookings_today = Booking.query.filter(
+        Booking.user_id    == user_id,
+        Booking.date       >= day_start,
+        Booking.date       <  day_end,
+        Booking.status     == "confirmed"
+    ).count()
+    if bookings_today >= 3:
+        return None, "Bạn đã đặt tối đa 3 sân trong ngày này."
+
+    # ── Ràng buộc 5: Trùng khung giờ (cùng sân) ───────────────────────────
+    conflict = Booking.query.filter(
+        Booking.product_id == product_id,
+        Booking.slot_label == slot_label,
+        Booking.date       == day_start,
+        Booking.status     == "confirmed"
+    ).first()
+    if conflict:
+        return None, "Khung giờ này đã được đặt bởi người khác."
+
     b = Booking(
-        user_id=user_id,
-        product_id=product_id,
-        slot_label=slot_label,
-        date=datetime.combine(date_obj, datetime.min.time()),
-        start_time=start_time,
-        end_time=end_time,
-        status="confirmed"
+        user_id    = user_id,
+        product_id = product_id,
+        slot_label = slot_label,
+        date       = day_start,
+        start_time = start_time,
+        end_time   = end_time,
+        status     = "confirmed"
     )
     db.session.add(b)
     db.session.commit()
-    return b
+    return b, None
 
 
 def cancel_booking_by_id(booking_id, user_id):
@@ -84,9 +125,9 @@ def get_slots_for_product_date(product_id, date_obj):
             "booked": s.label in booked_labels
         })
 
-    total_slots   = len(slots)
-    booked_count  = len(booked_labels)
-    available     = total_slots - booked_count
+    total_slots  = len(slots)
+    booked_count = len(booked_labels)
+    available    = total_slots - booked_count
 
     return result, available
 
@@ -100,7 +141,6 @@ def get_favorites_by_user(user_id):
 
 
 def toggle_favorite(user_id, product_id):
-    """Thêm nếu chưa có, xóa nếu đã có. Trả về True=đã thêm, False=đã xóa"""
     fav = Favorite.query.filter_by(user_id=user_id, product_id=product_id).first()
     if fav:
         db.session.delete(fav)
@@ -130,12 +170,43 @@ def get_reviews_by_product(product_id):
             .all())
 
 
+def has_booked_product(user_id, product_id):
+    """Kiểm tra user đã từng đặt sân này chưa (kể cả cancelled)"""
+    return Booking.query.filter(
+        Booking.user_id    == user_id,
+        Booking.product_id == product_id
+    ).first() is not None
+
+
+def has_reviewed_product(user_id, product_id):
+    """Kiểm tra user đã review sân này chưa"""
+    return Review.query.filter_by(
+        user_id    = user_id,
+        product_id = product_id
+    ).first() is not None
+
+
 def add_review(user_id, product_id, rating, content):
+    """
+    Ràng buộc đánh giá:
+    - Phải đã đặt sân này ít nhất 1 lần
+    - Chưa từng review sân này
+    - Rating từ 1-5
+    Trả về (review | None, error_msg | None)
+    """
+    if not has_booked_product(user_id, product_id):
+        return None, "Chỉ những người đã đặt sân này mới được đánh giá."
+
+    if has_reviewed_product(user_id, product_id):
+        return None, "Bạn đã đánh giá sân này rồi."
+
+    rating = max(1, min(5, int(rating)))
+
     r = Review(user_id=user_id, product_id=product_id,
                rating=rating, content=content)
     db.session.add(r)
     db.session.commit()
-    return r
+    return r, None
 
 
 # ===== PRODUCTS =====

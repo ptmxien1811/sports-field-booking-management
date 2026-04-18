@@ -5,12 +5,13 @@ from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,
                              cancel_booking_by_id, toggle_favorite,
                              add_review, get_product_by_id,
                              has_booked_product, has_reviewed_product)
-from bookingapp.models import Product, User, Booking
+from bookingapp.models import Product, User, Booking, Bill
 from bookingapp import admin
 from datetime import datetime, timedelta, date as date_type
 import datetime as dt
 import requests as http_requests
 import os
+from sqlalchemy import func
 
 # ===== CẤU HÌNH GOOGLE OAUTH =====
 GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID",     "YOUR_GOOGLE_CLIENT_ID")
@@ -447,6 +448,27 @@ def cancel_booking_final(id):
     flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
     return redirect(url_for("home", _anchor="booked"))
 
+@app.route("/stats")
+def stats():
+    total_revenue = db.session.query(func.sum(Bill.amount)).scalar() or 0
+    total_bookings = db.session.query(func.count(Bill.id)).scalar()
+
+    # doanh thu theo ngày
+    revenue_by_day = db.session.query(
+        func.date(Bill.created_at),
+        func.sum(Bill.amount)
+    ).group_by(func.date(Bill.created_at)).all()
+
+    labels = [str(r[0]) for r in revenue_by_day]
+    values = [float(r[1]) for r in revenue_by_day]
+
+    return render_template(
+        "stats.html",
+        total_revenue=total_revenue,
+        total_bookings=total_bookings,
+        labels=labels,
+        values=values
+    )
 
 @app.route("/favorites")
 def favorites():

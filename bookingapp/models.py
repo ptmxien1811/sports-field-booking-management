@@ -15,8 +15,8 @@ class BaseModel(db.Model):
 class Category(BaseModel):
     __tablename__ = 'category'
     name    = Column(String(100), nullable=False)
-    address = Column(String(200), nullable=False)
-    phone   = Column(String(50),  nullable=False)
+    address = Column(String(200), nullable=True)
+    phone   = Column(String(50),  nullable=True)
     products = relationship("Product", back_populates="category")
 
     def __str__(self):
@@ -108,6 +108,9 @@ class TimeSlot(BaseModel):
     label      = Column(String(20))
     product    = relationship("Product", back_populates="time_slots")
 
+    def __str__(self):
+        return self.label
+
 
 class Product(BaseModel):
     __tablename__ = 'products'
@@ -118,6 +121,8 @@ class Product(BaseModel):
     active      = Column(Boolean, default=True)
     created_at  = Column(DateTime, default=datetime.now)
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
+    address = Column(String(200), nullable=True)
+    phone = Column(String(50), nullable=True)
 
     category   = relationship("Category",  back_populates="products")
     bookings   = relationship("Booking",   back_populates="product", cascade="all, delete-orphan")
@@ -185,6 +190,22 @@ class Review(BaseModel):
     @property
     def stars(self):
         return "★" * self.rating + "☆" * (5 - self.rating)
+
+# ===== BILL =====
+class Bill(BaseModel):
+    __tablename__ = 'bill'
+
+    user_id    = Column(Integer, ForeignKey('user.id'))
+    product_id = Column(Integer, ForeignKey('products.id'))
+
+    amount     = Column(Float, nullable=False)
+    created_at = Column(DateTime, default=datetime.now)
+
+    user    = relationship("User")
+    product = relationship("Product")
+
+    def __str__(self):
+        return f"Bill #{self.id} - {self.amount}"
 
 
 if __name__ == "__main__":

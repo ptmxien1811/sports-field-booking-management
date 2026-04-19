@@ -5,7 +5,7 @@ from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,
                              cancel_booking_by_id, toggle_favorite,
                              add_review, get_product_by_id,
                              has_booked_product, has_reviewed_product)
-from bookingapp.models import Product, User, Booking, Bill
+from bookingapp.models import Product, User, Booking, Bill, Favorite, Review
 from bookingapp import admin
 from datetime import datetime, timedelta, date as date_type
 import datetime as dt
@@ -54,7 +54,9 @@ def login():
         if user and user.check_password(password):
             session["user_id"]  = user.id
             session["username"] = user.username
-            flash("Đăng nhập thành công!", "success")
+            # Admin → redirect thẳng trang admin
+            if username.lower() == "admin":
+                return redirect("/admin")
             return redirect(url_for("home"))
         flash("Tên đăng nhập hoặc mật khẩu không đúng!", "danger")
     return render_template("login.html")
@@ -63,7 +65,6 @@ def login():
 @app.route("/logout")
 def logout():
     session.clear()
-    flash("Bạn đã đăng xuất!", "info")
     return redirect(url_for("home"))
 
 
@@ -79,23 +80,18 @@ def register():
 
         if not username:
             return render_template("register.html", error="Vui lòng nhập tên đăng nhập")
-
         ok, msg = User.validate_password(password)
         if not ok:
             return render_template("register.html", error=msg)
-
         if password != confirm:
             return render_template("register.html", error="Mật khẩu xác nhận không khớp")
-
         if User.query.filter_by(username=username).first():
             return render_template("register.html", error="Tên đăng nhập đã tồn tại")
-
         if email:
             if not User.validate_email(email):
                 return render_template("register.html", error="Email không hợp lệ")
             if User.query.filter_by(email=email).first():
                 return render_template("register.html", error="Email này đã được sử dụng")
-
         if phone:
             if not User.validate_phone(phone):
                 return render_template("register.html", error="Số điện thoại không hợp lệ (cần 10 số, bắt đầu 0)")
@@ -106,7 +102,8 @@ def register():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
+        session["user_id"]  = user.id
+        session["username"] = user.username
         return redirect(url_for("home"))
 
     return render_template("register.html")
@@ -125,7 +122,6 @@ def login_email():
             return render_template("login.html", error="Email hoặc mật khẩu không đúng")
         session["user_id"]  = user.id
         session["username"] = user.username
-        flash("Đăng nhập thành công!", "success")
         return redirect(url_for("home"))
     return render_template("login.html")
 
@@ -143,26 +139,20 @@ def register_email():
             return render_template("register.html", error="Email không hợp lệ")
         if User.query.filter_by(email=email).first():
             return render_template("register.html", error="Email này đã được sử dụng")
-
         ok, msg = User.validate_password(password)
         if not ok:
             return render_template("register.html", error=msg)
         if password != confirm:
             return render_template("register.html", error="Mật khẩu xác nhận không khớp")
-
         if not username:
             username = email.split("@")[0]
-        base = username
-        i = 1
+        base = username; i = 1
         while User.query.filter_by(username=username).first():
-            username = f"{base}{i}"
-            i += 1
+            username = f"{base}{i}"; i += 1
 
         user = User(username=username, email=email, password="", auth_type='email')
         user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
+        db.session.add(user); db.session.commit()
         return redirect(url_for("home"))
     return render_template("register.html")
 
@@ -180,7 +170,6 @@ def login_phone():
             return render_template("login.html", error="Số điện thoại hoặc mật khẩu không đúng")
         session["user_id"]  = user.id
         session["username"] = user.username
-        flash("Đăng nhập thành công!", "success")
         return redirect(url_for("home"))
     return render_template("login.html")
 
@@ -198,26 +187,20 @@ def register_phone():
             return render_template("register.html", error="Số điện thoại không hợp lệ (10 số, bắt đầu 0)")
         if User.query.filter_by(phone=phone).first():
             return render_template("register.html", error="Số điện thoại này đã được sử dụng")
-
         ok, msg = User.validate_password(password)
         if not ok:
             return render_template("register.html", error=msg)
         if password != confirm:
             return render_template("register.html", error="Mật khẩu xác nhận không khớp")
-
         if not username:
             username = f"user_{phone[-4:]}"
-        base = username
-        i = 1
+        base = username; i = 1
         while User.query.filter_by(username=username).first():
-            username = f"{base}{i}"
-            i += 1
+            username = f"{base}{i}"; i += 1
 
         user = User(username=username, phone=phone, password="", auth_type='phone')
         user.set_password(password)
-        db.session.add(user)
-        db.session.commit()
-        flash("Đăng ký thành công! Vui lòng đăng nhập.", "success")
+        db.session.add(user); db.session.commit()
         return redirect(url_for("home"))
     return render_template("register.html")
 
@@ -241,7 +224,6 @@ def google_login():
 def google_callback():
     code = request.args.get("code")
     if not code:
-        flash("Đăng nhập Google thất bại!", "danger")
         return redirect(url_for("login"))
 
     token_res = http_requests.post(GOOGLE_TOKEN_URL, data={
@@ -253,13 +235,10 @@ def google_callback():
     })
     token_data   = token_res.json()
     access_token = token_data.get("access_token")
-
     if not access_token:
-        flash("Không lấy được token từ Google!", "danger")
         return redirect(url_for("login"))
 
-    user_res  = http_requests.get(GOOGLE_USER_URL,
-                                   headers={"Authorization": f"Bearer {access_token}"})
+    user_res  = http_requests.get(GOOGLE_USER_URL, headers={"Authorization": f"Bearer {access_token}"})
     user_info = user_res.json()
 
     google_id    = user_info.get("sub")
@@ -270,36 +249,28 @@ def google_callback():
     if not user:
         user = User.query.filter_by(email=google_email).first()
         if user:
-            user.google_id    = google_id
-            user.google_email = google_email
+            user.google_id = google_id; user.google_email = google_email
             db.session.commit()
         else:
             username = google_name.replace(" ", "") or f"user_{google_id[:6]}"
-            base = username
-            i = 1
+            base = username; i = 1
             while User.query.filter_by(username=username).first():
-                username = f"{base}{i}"
-                i += 1
-            user = User(
-                username=username, email=google_email,
-                google_id=google_id, google_email=google_email,
-                auth_type='google', password=""
-            )
-            db.session.add(user)
-            db.session.commit()
+                username = f"{base}{i}"; i += 1
+            user = User(username=username, email=google_email, google_id=google_id,
+                        google_email=google_email, auth_type='google', password="")
+            db.session.add(user); db.session.commit()
 
     session["user_id"]  = user.id
     session["username"] = user.username
-    flash(f"Chào mừng {user.username}! Đăng nhập Google thành công.", "success")
     return redirect(url_for("home"))
 
 
 # ===== VENUE DETAIL =====
 @app.route("/venue/<int:id>")
 def venue_detail(id):
-    product     = get_product_by_id(id)
-    user_id     = session.get("user_id")
-    can_review  = False
+    product      = get_product_by_id(id)
+    user_id      = session.get("user_id")
+    can_review   = False
     has_reviewed = False
     if user_id:
         can_review   = has_booked_product(user_id, id)
@@ -322,7 +293,6 @@ def api_slots(product_id):
     except ValueError:
         sel_date = date_type.today()
 
-    # Trả về thêm thông tin về giới hạn đặt sân trong ngày của user
     user_id       = session.get("user_id")
     bookings_today = 0
     if user_id:
@@ -339,34 +309,56 @@ def api_slots(product_id):
     return jsonify({
         "slots":          slots_data,
         "available":      available,
-        "bookings_today": bookings_today,   # số sân đã đặt hôm đó
+        "bookings_today": bookings_today,
         "max_per_day":    3,
     })
 
 
-# ===== API: ĐẶT SÂN =====
+# ===== API: ĐẶT SÂN (NHIỀU KHUNG GIỜ) =====
 @app.route("/api/book", methods=["POST"])
 def api_book():
-    # ── Ràng buộc 1: Phải đăng nhập ──────────────────────────────────────
     if not session.get("user_id"):
         return jsonify({"ok": False, "msg": "Vui lòng đăng nhập để đặt sân"}), 401
 
     data       = request.json
     product_id = data.get("product_id")
-    slot_label = data.get("slot")
     date_str   = data.get("date")
+
+    # Hỗ trợ cả 1 slot (string) và nhiều slots (list)
+    slots_raw = data.get("slots") or data.get("slot")
+    if isinstance(slots_raw, str):
+        slot_labels = [slots_raw]
+    elif isinstance(slots_raw, list):
+        slot_labels = slots_raw
+    else:
+        slot_labels = []
+
+    if not slot_labels:
+        return jsonify({"ok": False, "msg": "Vui lòng chọn ít nhất 1 khung giờ"}), 400
 
     try:
         sel_date = datetime.strptime(date_str, "%Y-%m-%d").date()
     except Exception:
         return jsonify({"ok": False, "msg": "Ngày không hợp lệ"}), 400
 
-    b, err = create_booking(session["user_id"], product_id, slot_label, sel_date)
-    if err:
-        return jsonify({"ok": False, "msg": err}), 400
+    booked_ids = []
+    errors     = []
 
-    return jsonify({"ok": True, "booking_id": b.id,
-                    "msg": f"Đặt sân thành công! Mã đặt: #{b.id}"})
+    for slot_label in slot_labels:
+        b, err = create_booking(session["user_id"], product_id, slot_label, sel_date)
+        if err:
+            errors.append(f"{slot_label}: {err}")
+        else:
+            booked_ids.append(b.id)
+
+    if not booked_ids:
+        return jsonify({"ok": False, "msg": "; ".join(errors)}), 400
+
+    msg = f"Đặt thành công {len(booked_ids)} khung giờ!"
+    if errors:
+        msg += f" ({len(errors)} khung giờ thất bại)"
+
+    return jsonify({"ok": True, "booking_ids": booked_ids, "msg": msg})
 
 
 # ===== API: TOGGLE FAVORITE =====
@@ -382,7 +374,6 @@ def api_favorite(product_id):
 # ===== API: GỬI ĐÁNH GIÁ =====
 @app.route("/api/review/<int:product_id>", methods=["POST"])
 def api_review(product_id):
-    # ── Phải đăng nhập ────────────────────────────────────────────────────
     if not session.get("user_id"):
         return jsonify({"ok": False, "msg": "Vui lòng đăng nhập để đánh giá"}), 401
 
@@ -413,14 +404,13 @@ def api_can_review(product_id):
     user_id = session.get("user_id")
     if not user_id:
         return jsonify({"can_review": False, "has_reviewed": False, "reason": "not_logged_in"})
-    booked      = has_booked_product(user_id, product_id)
-    reviewed    = has_reviewed_product(user_id, product_id)
+    booked   = has_booked_product(user_id, product_id)
+    reviewed = has_reviewed_product(user_id, product_id)
     return jsonify({
         "can_review":   booked and not reviewed,
         "has_reviewed": reviewed,
         "has_booked":   booked,
-        "reason":       "ok" if (booked and not reviewed)
-                        else ("already_reviewed" if reviewed else "not_booked")
+        "reason": "ok" if (booked and not reviewed) else ("already_reviewed" if reviewed else "not_booked")
     })
 
 
@@ -448,27 +438,156 @@ def cancel_booking_final(id):
     flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
     return redirect(url_for("home", _anchor="booked"))
 
+
+# ===== STATS =====
 @app.route("/stats")
 def stats():
-    total_revenue = db.session.query(func.sum(Bill.amount)).scalar() or 0
+    total_revenue  = db.session.query(func.sum(Bill.amount)).scalar() or 0
     total_bookings = db.session.query(func.count(Bill.id)).scalar()
-
-    # doanh thu theo ngày
     revenue_by_day = db.session.query(
-        func.date(Bill.created_at),
-        func.sum(Bill.amount)
+        func.date(Bill.created_at), func.sum(Bill.amount)
     ).group_by(func.date(Bill.created_at)).all()
-
     labels = [str(r[0]) for r in revenue_by_day]
     values = [float(r[1]) for r in revenue_by_day]
+    return render_template("stats.html",
+                           total_revenue=total_revenue,
+                           total_bookings=total_bookings,
+                           labels=labels, values=values)
 
-    return render_template(
-        "stats.html",
-        total_revenue=total_revenue,
-        total_bookings=total_bookings,
-        labels=labels,
-        values=values
-    )
+
+# ===== ACCOUNT PAGE =====
+@app.route("/account")
+def account():
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+    return render_template("account.html", username=session.get("username"))
+
+
+# ===== API: ACCOUNT - STATS =====
+@app.route("/api/my-bookings")
+def api_my_bookings():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False}), 401
+    count = Booking.query.filter_by(user_id=user_id, status="confirmed").count()
+    return jsonify({"bookings": count})
+
+
+@app.route("/api/my-favorites")
+def api_my_favorites():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False}), 401
+    count = Favorite.query.filter_by(user_id=user_id).count()
+    return jsonify({"favorites": count})
+
+
+@app.route("/api/my-reviews")
+def api_my_reviews():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False}), 401
+    count = Review.query.filter_by(user_id=user_id).count()
+    return jsonify({"reviews": count})
+
+
+# ===== API: ACCOUNT - BOOKING HISTORY (detail) =====
+@app.route("/api/my-bookings-detail")
+def api_my_bookings_detail():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False}), 401
+
+    bookings = Booking.query.filter_by(user_id=user_id).order_by(Booking.date.desc()).all()
+    items = []
+    for b in bookings:
+        items.append({
+            "id":           b.id,
+            "product_name": b.product.name,
+            "image":        b.product.image,
+            "address":      b.product.address or "",
+            "price":        b.product.price,
+            "slot_label":   b.slot_label,
+            "date_str":     b.date.strftime("%d/%m/%Y") if b.date else "",
+            "status":       b.status,
+        })
+    return jsonify({"items": items})
+
+
+# ===== API: ACCOUNT - FAVORITES (detail) =====
+@app.route("/api/my-favorites-detail")
+def api_my_favorites_detail():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False}), 401
+
+    favs = Favorite.query.filter_by(user_id=user_id).all()
+    items = []
+    for f in favs:
+        items.append({
+            "product_id":   f.product.id,
+            "product_name": f.product.name,
+            "image":        f.product.image,
+            "price":        f.product.price,
+        })
+    return jsonify({"items": items})
+
+
+# ===== API: UPDATE PROFILE =====
+@app.route("/api/update-profile", methods=["POST"])
+def api_update_profile():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
+
+    user  = db.session.get(User, user_id)
+    data  = request.json
+    email = data.get("email", "").strip() or None
+    phone = data.get("phone", "").strip() or None
+
+    if email:
+        if not User.validate_email(email):
+            return jsonify({"ok": False, "msg": "Email không hợp lệ"})
+        existing = User.query.filter_by(email=email).first()
+        if existing and existing.id != user_id:
+            return jsonify({"ok": False, "msg": "Email này đã được sử dụng"})
+        user.email = email
+
+    if phone:
+        if not User.validate_phone(phone):
+            return jsonify({"ok": False, "msg": "Số điện thoại không hợp lệ"})
+        existing = User.query.filter_by(phone=phone).first()
+        if existing and existing.id != user_id:
+            return jsonify({"ok": False, "msg": "Số điện thoại này đã được sử dụng"})
+        user.phone = phone
+
+    db.session.commit()
+    return jsonify({"ok": True})
+
+
+# ===== API: CHANGE PASSWORD =====
+@app.route("/api/change-password", methods=["POST"])
+def api_change_password():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
+
+    user    = db.session.get(User, user_id)
+    data    = request.json
+    current = data.get("current_password", "")
+    new_pw  = data.get("new_password", "")
+
+    if not user.check_password(current):
+        return jsonify({"ok": False, "msg": "Mật khẩu hiện tại không đúng"})
+
+    ok, msg = User.validate_password(new_pw)
+    if not ok:
+        return jsonify({"ok": False, "msg": msg})
+
+    user.set_password(new_pw)
+    db.session.commit()
+    return jsonify({"ok": True})
+
 
 @app.route("/favorites")
 def favorites():
@@ -483,10 +602,6 @@ def featured():
     featured_products = (Product.query.filter_by(active=True)
                          .order_by(Product.price.desc()).limit(6).all())
     return render_template("featured.html", products=featured_products, username=session.get('username'))
-
-@app.route("/account")
-def account():
-    return render_template("account.html")
 
 
 if __name__ == "__main__":

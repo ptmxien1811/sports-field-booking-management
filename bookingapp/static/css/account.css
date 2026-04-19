@@ -1,0 +1,536 @@
+/* =============================
+   ACCOUNT PAGE
+============================= */
+.acc-page {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    min-height: calc(100vh - 140px);
+    align-items: start;
+}
+
+/* =============================
+   SIDEBAR
+============================= */
+.acc-sidebar {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #e0e8f5;
+    overflow: hidden;
+    position: sticky;
+    top: 80px;
+    box-shadow: 0 2px 12px rgba(0, 64, 128, 0.07);
+}
+
+.acc-avatar-wrap {
+    background: linear-gradient(135deg, #0d4b8e 0%, #1a73e8 100%);
+    padding: 24px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.acc-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid rgba(255,255,255,0.5);
+    flex-shrink: 0;
+}
+
+.acc-user-info { overflow: hidden; }
+.acc-name {
+    font-size: 15px;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.acc-since { font-size: 12px; color: rgba(255,255,255,0.75); margin: 2px 0 0; }
+
+.acc-nav { padding: 10px 0; }
+
+.acc-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 20px;
+    font-size: 14px;
+    color: #444;
+    text-decoration: none;
+    transition: all 0.2s;
+    border-left: 3px solid transparent;
+}
+
+.acc-nav-item i { width: 16px; text-align: center; color: #999; transition: color 0.2s; }
+
+.acc-nav-item:hover {
+    background: #f0f6ff;
+    color: #1a73e8;
+    border-left-color: #b3d1f7;
+}
+.acc-nav-item:hover i { color: #1a73e8; }
+
+.acc-nav-item.active {
+    background: #e8f0fe;
+    color: #1a73e8;
+    font-weight: 600;
+    border-left-color: #1a73e8;
+}
+.acc-nav-item.active i { color: #1a73e8; }
+
+.acc-nav-logout {
+    margin-top: 8px;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 14px;
+    color: #d32f2f;
+}
+.acc-nav-logout i { color: #d32f2f; }
+.acc-nav-logout:hover { background: #fff5f5; color: #b71c1c; border-left-color: #ffcdd2; }
+.acc-nav-logout:hover i { color: #b71c1c; }
+
+/* =============================
+   MAIN PANELS
+============================= */
+.acc-main { min-width: 0; }
+
+.acc-panel { display: none; }
+.acc-panel.active { display: block; }
+
+.acc-panel-header {
+    margin-bottom: 20px;
+}
+.acc-panel-header h2 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #003366;
+    margin: 0 0 4px;
+}
+.acc-panel-header p {
+    font-size: 14px;
+    color: #888;
+    margin: 0;
+}
+
+/* =============================
+   CARD
+============================= */
+.acc-card {
+    background: #fff;
+    border: 1px solid #e0e8f5;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 12px rgba(0, 64, 128, 0.05);
+}
+
+.acc-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #004080;
+    margin: 0 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Avatar section */
+.acc-avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid #f0f5ff;
+}
+
+.acc-avatar-lg {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0d4b8e, #1a73e8);
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(26, 115, 232, 0.35);
+}
+
+.acc-avatar-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: #003366;
+    margin: 0 0 2px;
+}
+.acc-avatar-sub { font-size: 13px; color: #888; margin: 0; }
+
+/* =============================
+   FORM
+============================= */
+.acc-form { }
+
+.acc-form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.acc-form-group { display: flex; flex-direction: column; gap: 6px; }
+.acc-form-group.full { grid-column: 1 / -1; margin-bottom: 16px; }
+
+.acc-form-group label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444;
+}
+
+.acc-input {
+    padding: 10px 14px;
+    border: 1.5px solid #d0dff0;
+    border-radius: 10px;
+    font-size: 14px;
+    color: #333;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    background: #fff;
+    width: 100%;
+    box-sizing: border-box;
+    outline: none;
+}
+
+.acc-input:focus {
+    border-color: #1a73e8;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.12);
+}
+
+.acc-input.readonly {
+    background: #f8faff;
+    color: #888;
+    cursor: not-allowed;
+}
+
+/* Password input with toggle */
+.acc-input-pw {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.acc-input-pw .acc-input {
+    padding-right: 40px;
+}
+
+.pw-toggle {
+    position: absolute;
+    right: 12px;
+    cursor: pointer;
+    color: #aaa;
+    font-size: 14px;
+    transition: color 0.2s;
+}
+.pw-toggle:hover { color: #1a73e8; }
+
+/* Password rules */
+.pw-rules {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 16px;
+    margin: 12px 0;
+    padding: 12px 14px;
+    background: #f8faff;
+    border-radius: 8px;
+}
+
+.pw-rule {
+    font-size: 12px;
+    color: #aaa;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: color 0.2s;
+}
+
+.pw-rule.ok { color: #2e7d32; }
+.pw-rule.ok i { color: #2e7d32; }
+
+/* Password strength bar */
+.pw-strength {
+    height: 4px;
+    border-radius: 2px;
+    margin-top: 6px;
+    background: #e0e0e0;
+    transition: all 0.3s;
+}
+
+/* Save button */
+.acc-form-actions {
+    margin-top: 8px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.acc-btn-save {
+    background: linear-gradient(135deg, #0d4b8e, #1a73e8);
+    color: #fff;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: opacity 0.2s, transform 0.15s;
+    box-shadow: 0 3px 10px rgba(26, 115, 232, 0.3);
+}
+.acc-btn-save:hover { opacity: 0.9; transform: translateY(-1px); }
+.acc-btn-save:active { transform: translateY(0); }
+
+.acc-msg {
+    font-size: 13px;
+    min-height: 18px;
+    margin-bottom: 8px;
+}
+
+/* =============================
+   STATS ROW
+============================= */
+.acc-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+}
+
+.acc-stat-card {
+    background: #fff;
+    border: 1px solid #e0e8f5;
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 2px 8px rgba(0, 64, 128, 0.05);
+}
+
+.acc-stat-icon {
+    font-size: 26px;
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.acc-stat-icon.blue { color: #1a73e8; background: #e8f0fe; }
+.acc-stat-icon.red  { color: #e53935; background: #fce8e6; }
+.acc-stat-icon.yellow { color: #f5a623; background: #fff8e6; }
+
+.acc-stat-num {
+    font-size: 22px;
+    font-weight: 700;
+    color: #003366;
+    margin: 0;
+}
+.acc-stat-label { font-size: 12px; color: #888; margin: 0; }
+
+/* =============================
+   BOOKING HISTORY
+============================= */
+.acc-booking-list { display: flex; flex-direction: column; gap: 12px; }
+
+.acc-booking-item {
+    background: #fff;
+    border: 1px solid #e0e8f5;
+    border-radius: 14px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 1px 6px rgba(0,64,128,0.05);
+    transition: box-shadow 0.2s;
+}
+.acc-booking-item:hover { box-shadow: 0 4px 16px rgba(0,64,128,0.1); }
+
+.acc-booking-img {
+    width: 64px;
+    height: 64px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+    background: #f0f5ff;
+}
+
+.acc-booking-body { flex: 1; min-width: 0; }
+
+.acc-booking-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #003366;
+    margin: 0 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.acc-booking-meta {
+    font-size: 13px;
+    color: #777;
+    margin: 0;
+}
+
+.acc-booking-right { text-align: right; flex-shrink: 0; }
+
+.acc-booking-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #e53935;
+    margin: 0 0 6px;
+}
+
+.acc-booking-status {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-confirmed { background: #e8f5e9; color: #2e7d32; }
+.status-cancelled { background: #fce8e6; color: #c62828; }
+
+/* =============================
+   FAVORITES GRID
+============================= */
+.acc-fav-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 16px;
+}
+
+.acc-fav-card {
+    background: #fff;
+    border: 1px solid #e0e8f5;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,64,128,0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.acc-fav-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,64,128,0.12);
+}
+
+.acc-fav-img {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+}
+
+.acc-fav-body { padding: 12px; }
+
+.acc-fav-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: #003366;
+    margin: 0 0 4px;
+}
+
+.acc-fav-price {
+    font-size: 13px;
+    color: #e53935;
+    font-weight: 600;
+    margin: 0 0 8px;
+}
+
+.acc-fav-btn {
+    display: block;
+    width: 100%;
+    padding: 6px;
+    background: #004080;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+.acc-fav-btn:hover { background: #003366; }
+
+/* =============================
+   EMPTY STATE
+============================= */
+.acc-empty {
+    text-align: center;
+    padding: 48px 20px;
+    color: #aaa;
+}
+.acc-empty i { font-size: 48px; margin-bottom: 12px; display: block; }
+.acc-empty p { font-size: 15px; margin: 0; }
+
+/* Loading */
+.acc-loading {
+    text-align: center;
+    padding: 32px;
+    color: #aaa;
+    font-size: 14px;
+}
+
+/* =============================
+   TOAST
+============================= */
+.acc-toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #333;
+    color: #fff;
+    padding: 10px 24px;
+    border-radius: 24px;
+    font-size: 14px;
+    opacity: 0;
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+    z-index: 9999;
+    white-space: nowrap;
+}
+
+.acc-toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* =============================
+   RESPONSIVE
+============================= */
+@media (max-width: 768px) {
+    .acc-page {
+        grid-template-columns: 1fr;
+    }
+    .acc-sidebar { position: static; }
+    .acc-form-row { grid-template-columns: 1fr; }
+    .acc-stats-row { grid-template-columns: 1fr; }
+    .pw-rules { grid-template-columns: 1fr; }
+}

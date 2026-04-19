@@ -15,8 +15,6 @@ class BaseModel(db.Model):
 class Category(BaseModel):
     __tablename__ = 'category'
     name    = Column(String(100), nullable=False)
-    address = Column(String(200), nullable=True)
-    phone   = Column(String(50),  nullable=True)
     products = relationship("Product", back_populates="category")
 
     def __str__(self):
@@ -28,18 +26,15 @@ class User(BaseModel):
     __tablename__ = 'user'
 
     username     = Column(String(80),  unique=True, nullable=False)
-    password     = Column(String(255), nullable=True)          # nullable vì Google login không có password
+    password     = Column(String(255), nullable=True)
     email        = Column(String(120), unique=True, nullable=True)
     phone        = Column(String(20),  unique=True, nullable=True)
     avatar       = Column(String(200), default="default_avatar.png")
 
-    # Google OAuth
     google_id    = Column(String(100), unique=True, nullable=True)
     google_email = Column(String(120), nullable=True)
 
-    # Loại tài khoản: 'local' | 'google' | 'email' | 'phone'
     auth_type    = Column(String(20),  default='local')
-
     created_at   = Column(DateTime, default=datetime.now)
 
     bookings  = relationship("Booking",  back_populates="user")
@@ -56,15 +51,6 @@ class User(BaseModel):
 
     @staticmethod
     def validate_password(password):
-        """
-        Ràng buộc mật khẩu:
-        - Ít nhất 8 ký tự
-        - Có chữ hoa
-        - Có chữ thường
-        - Có số
-        - Có ký tự đặc biệt
-        Trả về (ok: bool, message: str)
-        """
         errors = []
         if len(password) < 8:
             errors.append("ít nhất 8 ký tự")
@@ -87,7 +73,6 @@ class User(BaseModel):
 
     @staticmethod
     def validate_phone(phone):
-        # Số điện thoại VN: 10 số, bắt đầu bằng 0
         pattern = r'^(0[3-9][0-9]{8})$'
         return bool(re.match(pattern, phone))
 
@@ -121,8 +106,8 @@ class Product(BaseModel):
     active      = Column(Boolean, default=True)
     created_at  = Column(DateTime, default=datetime.now)
     category_id = Column(Integer, ForeignKey('category.id'), nullable=False)
-    address = Column(String(200), nullable=True)
-    phone = Column(String(50), nullable=True)
+    address     = Column(String(200), nullable=True)
+    phone       = Column(String(50),  nullable=True)
 
     category   = relationship("Category",  back_populates="products")
     bookings   = relationship("Booking",   back_populates="product", cascade="all, delete-orphan")
@@ -190,6 +175,7 @@ class Review(BaseModel):
     @property
     def stars(self):
         return "★" * self.rating + "☆" * (5 - self.rating)
+
 
 # ===== BILL =====
 class Bill(BaseModel):

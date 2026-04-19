@@ -1,29 +1,28 @@
-/* venue_detail.js – Booking + Review logic với đầy đủ ràng buộc */
+/* venue_detail.js – Booking nhiều khung giờ + Review */
 
-const card       = document.querySelector(".vd-booking-card");
-const PRODUCT_ID = card ? parseInt(card.dataset.productId) : window.PRODUCT_ID;
+const card        = document.querySelector(".vd-booking-card");
+const PRODUCT_ID  = card ? parseInt(card.dataset.productId) : window.PRODUCT_ID;
+const PRICE_HOUR  = card ? parseFloat(card.dataset.price)   : (window.PRICE_PER_HOUR || 0);
 
-let selectedDate = null;   // "YYYY-MM-DD"
-let selectedSlot = null;   // "HH:MM - HH:MM"
+let selectedDate       = null;   // "YYYY-MM-DD"
+let selectedSlots      = new Set(); // Set các label đã chọn: "HH:MM - HH:MM"
 let currentYear, currentMonth;
-let bookingsTodayCount = 0;  // số lần đã đặt trong ngày đang chọn
-let selectedRating = 0;
+let bookingsTodayCount = 0;
+let selectedRating     = 0;
 
-// ─── Khởi tạo ──────────────────────────────────────────────────────────────
+// ─── KHỞI TẠO ──────────────────────────────────────────────────────────────
 (function init() {
     const now = new Date();
     currentYear  = now.getFullYear();
     currentMonth = now.getMonth();   // 0-based
 
-    // Chọn mặc định hôm nay
-    const today = toDateStr(now);
-    selectedDate = today;
+    selectedDate = toDateStr(now);
     renderCalendar();
-    fetchSlots(today);
+    fetchSlots(selectedDate);
 })();
 
 
-// ─── Calendar ──────────────────────────────────────────────────────────────
+// ─── CALENDAR ──────────────────────────────────────────────────────────────
 function renderCalendar() {
     const monthLabel = document.getElementById("monthLabel");
     const daysGrid   = document.getElementById("daysGrid");
@@ -33,17 +32,13 @@ function renderCalendar() {
                     "Tháng 7","Tháng 8","Tháng 9","Tháng 10","Tháng 11","Tháng 12"];
     monthLabel.textContent = `${months[currentMonth]} ${currentYear}`;
 
-    const firstDay  = new Date(currentYear, currentMonth, 1).getDay(); // 0=Sun
-    const daysInM   = new Date(currentYear, currentMonth + 1, 0).getDate();
-    const today     = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    // Chuyển Sun=0 → Mon=0
-    const offset = (firstDay + 6) % 7;
+    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+    const daysInM  = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const today    = new Date(); today.setHours(0, 0, 0, 0);
+    const offset   = (firstDay + 6) % 7; // Mon=0
 
     daysGrid.innerHTML = "";
 
-    // Ô trống đầu tháng
     for (let i = 0; i < offset; i++) {
         daysGrid.insertAdjacentHTML("beforeend", `<div class="day"></div>`);
     }
@@ -74,26 +69,26 @@ function changeMonth(dir) {
 }
 
 function selectDate(dateStr) {
-    // Không cho chọn ngày quá khứ
     const picked = new Date(dateStr);
-    const today  = new Date(); today.setHours(0,0,0,0);
+    const today  = new Date(); today.setHours(0, 0, 0, 0);
     if (picked < today) return;
 
-    selectedDate = dateStr;
-    selectedSlot = null;
+    selectedDate  = dateStr;
+    selectedSlots.clear(); // Reset slots khi đổi ngày
     renderCalendar();
     fetchSlots(dateStr);
+    updateBookingSummary();
 }
 
 function toDateStr(d) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
+    const y   = d.getFullYear();
+    const m   = String(d.getMonth() + 1).padStart(2, "0");
     const day = String(d.getDate()).padStart(2, "0");
     return `${y}-${m}-${day}`;
 }
 
 
-// ─── Fetch slots từ server ──────────────────────────────────────────────────
+// ─── FETCH SLOTS ───────────────────────────────────────────────────────────
 function fetchSlots(dateStr) {
     setAvailText("Đang tải...");
     fetch(`/api/slots/${PRODUCT_ID}?date=${dateStr}`)
@@ -130,17 +125,16 @@ function updateDailyLimitInfo(count, max) {
 }
 
 
-// ─── Render time slots ──────────────────────────────────────────────────────
+// ─── RENDER SLOTS (hỗ trợ multi-select) ────────────────────────────────────
 function renderSlots(slotsData, dateStr) {
-    const periodMap = { morning: "morning", afternoon: "afternoon", evening: "evening" };
-    Object.values(periodMap).forEach(id => {
+    ["morning", "afternoon", "evening"].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.innerHTML = "";
     });
 
-    const nowDate  = new Date();
-    const selDate  = new Date(dateStr);
-    const isToday  = selDate.toDateString() === nowDate.toDateString();
+    const nowDate = new Date();
+    const selDate = new Date(dateStr);
+    const isToday = selDate.toDateString() === nowDate.toDateString();
 
     Object.entries(slotsData).forEach(([period, slots]) => {
         const container = document.getElementById(period);
@@ -158,76 +152,127 @@ function renderSlots(slotsData, dateStr) {
             }
 
             let cls = "slot";
-            let onclick = "";
+            let attrs = "";
 
             if (s.booked) {
                 cls += " booked";
+                attrs = 'disabled';
             } else if (isPast) {
                 cls += " past";
-            } else if (s.label === selectedSlot) {
-                cls += " selected";
+                attrs = 'disabled';
             } else {
-                onclick = `onclick="selectSlot(this, '${s.label}')"`;
+                // Nếu đang trong danh sách selected → highlight
+                if (selectedSlots.has(s.label)) {
+                    cls += " selected";
+                }
+                attrs = `onclick="toggleSlot(this, '${s.label}')"`;
             }
 
             container.insertAdjacentHTML("beforeend",
-                `<div class="${cls}" ${onclick}>${s.label}</div>`);
+                `<div class="${cls}" ${attrs}>${s.label}</div>`);
         });
     });
 }
 
-function selectSlot(el, label) {
-    // Nếu chưa đăng nhập, chặn luôn
-    if (!window.IS_LOGGED_IN) {
-        requireLogin();
-        return;
-    }
-    // Nếu đã đạt giới hạn
-    if (bookingsTodayCount >= 3) {
-        showBookMsg("⚠️ Bạn đã đặt tối đa 3 sân trong ngày này.", "error");
-        return;
+// ─── TOGGLE SLOT (multi-select) ─────────────────────────────────────────────
+function toggleSlot(el, label) {
+    if (!window.IS_LOGGED_IN) { requireLogin(); return; }
+
+    if (selectedSlots.has(label)) {
+        // Bỏ chọn
+        selectedSlots.delete(label);
+        el.classList.remove("selected");
+    } else {
+        // Kiểm tra giới hạn 3 sân/ngày (tổng đã đặt + đang chọn)
+        if ((bookingsTodayCount + selectedSlots.size) >= 3) {
+            showBookMsg("⚠️ Bạn chỉ còn có thể đặt thêm " + (3 - bookingsTodayCount) + " sân trong ngày này.", "error");
+            return;
+        }
+        // Thêm vào
+        selectedSlots.add(label);
+        el.classList.add("selected");
     }
 
-    document.querySelectorAll(".slot.selected").forEach(s => s.classList.remove("selected"));
-    el.classList.add("selected");
-    selectedSlot = label;
+    updateBookingSummary();
     showBookMsg("", "");
 }
 
+// ─── CẬP NHẬT SUMMARY ───────────────────────────────────────────────────────
+function updateBookingSummary() {
+    const summary   = document.getElementById("bookingSummary");
+    const tagsWrap  = document.getElementById("selectedSlotTags");
+    const totalEl   = document.getElementById("totalPriceText");
 
-// ─── Đặt sân ───────────────────────────────────────────────────────────────
+    if (!summary) return;
+
+    if (selectedSlots.size === 0) {
+        summary.style.display = "none";
+        return;
+    }
+
+    summary.style.display = "block";
+
+    // Render tags
+    const sorted = Array.from(selectedSlots).sort();
+    tagsWrap.innerHTML = '<div class="vd-slot-tags">' +
+        sorted.map(label =>
+            `<span class="vd-slot-tag">
+                ${label}
+                <span class="remove-slot" onclick="removeSlot('${label}')">×</span>
+            </span>`
+        ).join("") +
+    '</div>';
+
+    // Tổng tiền
+    const total = selectedSlots.size * PRICE_HOUR;
+    totalEl.textContent = `Tổng: ${total.toLocaleString("vi-VN")}đ (${selectedSlots.size} giờ)`;
+}
+
+// Xóa 1 slot từ tag
+function removeSlot(label) {
+    selectedSlots.delete(label);
+    // Bỏ class selected trên DOM
+    document.querySelectorAll(".slot").forEach(el => {
+        if (el.textContent.trim() === label) {
+            el.classList.remove("selected");
+        }
+    });
+    updateBookingSummary();
+}
+
+
+// ─── ĐẶT SÂN ────────────────────────────────────────────────────────────────
 const bookBtn = document.getElementById("bookBtn");
 if (bookBtn) {
     bookBtn.addEventListener("click", () => {
         if (!window.IS_LOGGED_IN) { requireLogin(); return; }
-        if (!selectedDate || !selectedSlot) {
-            showBookMsg("Vui lòng chọn ngày và khung giờ.", "error");
+
+        if (!selectedDate) {
+            showBookMsg("Vui lòng chọn ngày.", "error");
             return;
         }
 
-        // Client-side: kiểm tra ngày quá khứ
+        if (selectedSlots.size === 0) {
+            showBookMsg("Vui lòng chọn ít nhất 1 khung giờ.", "error");
+            return;
+        }
+
         const picked = new Date(selectedDate);
-        const today  = new Date(); today.setHours(0,0,0,0);
+        const today  = new Date(); today.setHours(0, 0, 0, 0);
         if (picked < today) {
             showBookMsg("Không thể đặt sân ngày trong quá khứ.", "error");
             return;
         }
 
-        // Client-side: kiểm tra giới hạn 3 sân/ngày
-        if (bookingsTodayCount >= 3) {
-            showBookMsg("Bạn đã đặt tối đa 3 sân trong ngày này.", "error");
-            return;
-        }
-
-        bookBtn.disabled     = true;
-        bookBtn.textContent  = "Đang xử lý...";
+        bookBtn.disabled    = true;
+        bookBtn.textContent = "Đang xử lý...";
 
         fetch("/api/book", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 product_id: PRODUCT_ID,
-                slot:       selectedSlot,
+                slots:      Array.from(selectedSlots),  // Gửi nhiều slots
                 date:       selectedDate,
             }),
         })
@@ -235,9 +280,9 @@ if (bookBtn) {
         .then(data => {
             if (data.ok) {
                 showBookMsg("✅ " + data.msg, "success");
-                // Refresh slots để hiển thị slot vừa đặt
-                selectedSlot = null;
-                fetchSlots(selectedDate);
+                selectedSlots.clear();
+                updateBookingSummary();
+                fetchSlots(selectedDate); // Reload slots
             } else {
                 showBookMsg("❌ " + data.msg, "error");
             }
@@ -260,7 +305,7 @@ function showBookMsg(msg, type) {
 }
 
 
-// ─── Review ─────────────────────────────────────────────────────────────────
+// ─── REVIEW ──────────────────────────────────────────────────────────────────
 function toggleReviewForm() {
     const form = document.getElementById("reviewForm");
     if (!form) return;
@@ -305,22 +350,19 @@ function submitReview() {
     }
 
     fetch(`/api/review/${PRODUCT_ID}`, {
-        method: "POST",
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rating: selectedRating, content }),
+        body:    JSON.stringify({ rating: selectedRating, content }),
     })
     .then(r => r.json())
     .then(data => {
         if (data.ok) {
             setReviewMsg("✅ Đánh giá của bạn đã được ghi nhận!", "success");
             appendReviewCard(data);
-            // Ẩn form và cập nhật trạng thái
             window.HAS_REVIEWED = true;
             document.getElementById("reviewForm").style.display = "none";
-            // Cập nhật số lượng & avg rating
             const cnt = document.getElementById("reviewCount");
             if (cnt) cnt.textContent = parseInt(cnt.textContent) + 1;
-            // Reload avg (đơn giản: reload trang sau 1.5s)
             setTimeout(() => location.reload(), 1500);
         } else {
             setReviewMsg("❌ " + data.msg, "error");

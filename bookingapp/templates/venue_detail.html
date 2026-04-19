@@ -1,11 +1,13 @@
 {% extends "layout/base.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/venue_detail.css') }}">
 
 <div class="vd-page">
 
   <div class="vd-top-images">
-    <img src="{{ url_for('static', filename='image/' + product.image) }}" class="vd-main-img">
+    <img src="{{ url_for('static', filename='image/' + product.image) }}" class="vd-main-img" alt="{{ product.name }}">
   </div>
 
   <div class="vd-main-grid">
@@ -13,7 +15,8 @@
     <!-- CỘT TRÁI -->
     <div class="vd-left">
       <h2 class="vd-title">{{ product.name }}</h2>
-      <p class="vd-addr">📍 {{ product.category.address }}</p>
+      <p class="vd-addr">📍 {{ product.address or 'Đang cập nhật' }}</p>
+      <p class="vd-addr">📞 {{ product.phone or 'Đang cập nhật' }}</p>
 
       <div class="vd-box">
         <h3 class="vd-section-title">ℹ️ Thông tin chi tiết</h3>
@@ -29,7 +32,7 @@
         </div>
       </div>
 
-      <!-- ===== REVIEWS ===== -->
+      <!-- REVIEWS -->
       <div class="vd-box">
         <h3 class="vd-section-title">⭐ Đánh giá từ người chơi</h3>
         <div class="vd-rating-row">
@@ -37,40 +40,33 @@
           <strong id="avgRatingDisplay">{{ product.avg_rating }}</strong>
           <span class="vd-rating-count"><span id="reviewCount">{{ product.reviews|length }}</span> đánh giá</span>
 
-          {# ── Nút "Viết đánh giá": chỉ hiện khi đã đặt sân và chưa review ── #}
           {% if not username %}
-            {# Chưa đăng nhập: hiện nút nhưng click sẽ báo đăng nhập #}
             <button class="vd-review-btn" onclick="requireLogin()">Viết đánh giá</button>
           {% elif can_review and not has_reviewed %}
             <button class="vd-review-btn" onclick="toggleReviewForm()">Viết đánh giá</button>
           {% elif has_reviewed %}
             <span class="vd-reviewed-badge">✅ Đã đánh giá</span>
           {% else %}
-            {# Đã đăng nhập nhưng chưa đặt sân này #}
             <span class="vd-review-locked" title="Chỉ người đã đặt sân mới được đánh giá">🔒 Đặt sân để đánh giá</span>
           {% endif %}
         </div>
 
-        <!-- Form đánh giá (chỉ hiện khi có quyền) -->
         {% if can_review and not has_reviewed %}
         <div id="reviewForm" style="display:none; margin-bottom:16px; padding:14px;
              background:#f9f9f9; border-radius:10px; border:1px solid #e0e0e0">
           <p style="font-weight:600; margin-bottom:10px">Đánh giá của bạn</p>
           <div class="star-select" id="starSelect">
             {% for i in range(1, 6) %}
-            <span class="star-opt" data-val="{{ i }}"
-                  onclick="setRating({{ i }})">★</span>
+            <span class="star-opt" data-val="{{ i }}" onclick="setRating({{ i }})">★</span>
             {% endfor %}
           </div>
           <p style="font-size:12px; color:#888; margin-top:4px;" id="ratingHint">Chọn số sao (1–5)</p>
           <textarea id="reviewContent" rows="3"
             placeholder="Chia sẻ trải nghiệm của bạn..."
-            style="width:100%; margin-top:10px; padding:8px;
-                   border:1px solid #ddd; border-radius:8px;
-                   font-size:14px; resize:none; box-sizing:border-box;"></textarea>
+            style="width:100%; margin-top:10px; padding:8px; border:1px solid #ddd;
+                   border-radius:8px; font-size:14px; resize:none; box-sizing:border-box;"></textarea>
           <button onclick="submitReview()"
-            style="margin-top:8px; padding:8px 20px;
-                   background:#1a73e8; color:#fff;
+            style="margin-top:8px; padding:8px 20px; background:#1a73e8; color:#fff;
                    border:none; border-radius:8px; cursor:pointer">
             Gửi đánh giá
           </button>
@@ -78,7 +74,6 @@
         </div>
         {% endif %}
 
-        <!-- Danh sách reviews -->
         <div id="reviewList">
           {% for review in product.reviews %}
           <div class="vd-review-card">
@@ -94,12 +89,12 @@
           </div>
           {% endfor %}
         </div>
-      </div><!-- /vd-box reviews -->
-    </div><!-- /vd-left -->
+      </div>
+    </div>
 
     <!-- CỘT PHẢI: BOOKING -->
     <div class="vd-right">
-      <div class="vd-booking-card" data-product-id="{{ product.id }}">
+      <div class="vd-booking-card" data-product-id="{{ product.id }}" data-price="{{ product.price }}">
 
         <div class="vd-price-row">
           <span class="vd-price">{{ "{:,.0f}".format(product.price) }}đ</span>
@@ -110,9 +105,11 @@
           <span id="availText">Đang tải...</span>
         </div>
 
-        <!-- Thông báo giới hạn đặt sân -->
         <div id="dailyLimitInfo" style="display:none; font-size:12px; color:#e65100;
-             background:#fff3e0; padding:6px 10px; border-radius:6px; margin-bottom:8px;">
+             background:#fff3e0; padding:6px 10px; border-radius:6px; margin-bottom:8px;"></div>
+
+        <div class="vd-multislot-tip">
+          💡 Bạn có thể chọn <strong>nhiều khung giờ</strong> để đặt cùng lúc!
         </div>
 
         <!-- Calendar -->
@@ -137,14 +134,13 @@
 
         <hr class="vd-divider">
 
-        <!-- Time slots -->
         <div class="ts-section">
           <div class="ts-header">
             <p class="ts-title">Chọn Khung Giờ</p>
             <div class="ts-legend">
               <span class="leg"><i class="leg-dot empty"></i> Trống</span>
-              <span class="leg"><i class="leg-dot booked"></i> Đã đặt</span>
-              <span class="leg"><i class="leg-dot active"></i> Đang chọn</span>
+              <span class="leg"><i class="leg-dot booked-dot"></i> Đã đặt</span>
+              <span class="leg"><i class="leg-dot active-dot"></i> Đang chọn</span>
             </div>
           </div>
           <p class="period-label">☀️ Buổi Sáng</p>
@@ -154,8 +150,15 @@
           <p class="period-label">🌙 Buổi Tối</p>
           <div class="slots" id="evening"></div>
           <div class="warn-box">
-            ⚠️ Các khung giờ sau 22:00 hiện không khả dụng cho đặt trước trực tuyến.
+            ⚠️ Khung giờ sau 22:00 không khả dụng đặt trực tuyến.
           </div>
+        </div>
+
+        <!-- Summary nhiều slot -->
+        <div id="bookingSummary" class="vd-booking-summary" style="display:none;">
+          <p class="vd-summary-title">📋 Khung giờ đã chọn:</p>
+          <div id="selectedSlotTags"></div>
+          <p id="totalPriceText" class="vd-total-price"></p>
         </div>
 
         {% if username %}
@@ -166,13 +169,13 @@
           </button>
         {% endif %}
 
-        <div id="bookMsg" style="font-size:13px; text-align:center; margin-top:6px;"></div>
-        <p class="vd-book-note">Không thu phí đặt cọc. Hủy miễn phí trước 2 tiếng</p>
+        <div id="bookMsg"></div>
+        <p class="vd-book-note">Không thu phí đặt cọc · Hủy miễn phí trước 2 tiếng</p>
 
         <div class="vd-map-box">
           <p style="font-size:13px; font-weight:600; margin-bottom:6px">📌 Vị trí sân</p>
-          <p class="vd-map-addr">{{ product.category.address }}</p>
-          <a href="https://maps.google.com/?q={{ product.category.address }}"
+          <p class="vd-map-addr">{{ product.address or 'Đang cập nhật' }}</p>
+          <a href="https://maps.google.com/?q={{ product.address }}"
              target="_blank" class="vd-map-link">Xem trên Google Maps ↗</a>
         </div>
 
@@ -183,11 +186,11 @@
 </div>
 
 <script>
-  // Truyền trạng thái đăng nhập vào JS
-  window.IS_LOGGED_IN  = {{ 'true' if username else 'false' }};
-  window.CAN_REVIEW    = {{ 'true' if can_review else 'false' }};
-  window.HAS_REVIEWED  = {{ 'true' if has_reviewed else 'false' }};
-  window.PRODUCT_ID    = {{ product.id }};
+  window.IS_LOGGED_IN   = {{ 'true' if username else 'false' }};
+  window.CAN_REVIEW     = {{ 'true' if can_review else 'false' }};
+  window.HAS_REVIEWED   = {{ 'true' if has_reviewed else 'false' }};
+  window.PRODUCT_ID     = {{ product.id }};
+  window.PRICE_PER_HOUR = {{ product.price }};
 </script>
 <script src="{{ url_for('static', filename='js/venue_detail.js') }}"></script>
 {% endblock %}

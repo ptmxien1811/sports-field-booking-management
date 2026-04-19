@@ -450,14 +450,62 @@ def cancel_booking_final(id):
 
 @app.route("/stats")
 def stats():
-    total_revenue = db.session.query(func.sum(Bill.amount)).scalar() or 0
-    total_bookings = db.session.query(func.count(Bill.id)).scalar()
+    start_date = request.args.get("start_date")
+    end_date   = request.args.get("end_date")
 
-    # doanh thu theo ngày
-    revenue_by_day = db.session.query(
+    today = datetime.now().date()
+
+    start = None
+    end   = None
+
+    # ===== XỬ LÝ START DATE =====
+    if start_date:
+        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+
+        if start_dt > today:
+            start_dt = today
+
+        start = datetime.combine(start_dt, datetime.min.time())
+
+    # ===== XỬ LÝ END DATE =====
+    if end_date:
+        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+
+        if end_dt > today:
+            end_dt = today
+
+        end = datetime.combine(end_dt, datetime.min.time()) + timedelta(days=1)
+
+    # ===== QUERY =====
+    query = db.session.query(Bill)
+
+    if start:
+        query = query.filter(Bill.created_at >= start)
+
+    if end:
+        query = query.filter(Bill.created_at < end)
+
+    bills = query.all()
+
+    total_revenue = sum(b.amount for b in bills)
+    total_bookings = len(bills)
+
+    # ===== CHART =====
+    revenue_query = db.session.query(
         func.date(Bill.created_at),
         func.sum(Bill.amount)
-    ).group_by(func.date(Bill.created_at)).all()
+    )
+
+    if start:
+        revenue_query = revenue_query.filter(Bill.created_at >= start)
+
+    if end:
+        revenue_query = revenue_query.filter(Bill.created_at < end)
+
+    revenue_by_day = revenue_query \
+        .group_by(func.date(Bill.created_at)) \
+        .order_by(func.date(Bill.created_at).asc()) \
+        .all()
 
     labels = [str(r[0]) for r in revenue_by_day]
     values = [float(r[1]) for r in revenue_by_day]
@@ -467,9 +515,11 @@ def stats():
         total_revenue=total_revenue,
         total_bookings=total_bookings,
         labels=labels,
-        values=values
+        values=values,
+        start_date=start_date or "",
+        end_date=end_date or "",
+        today=today.strftime("%Y-%m-%d")
     )
-
 @app.route("/favorites")
 def favorites():
     return render_template("favorites.html", username=session.get('username'))

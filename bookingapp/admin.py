@@ -2,7 +2,7 @@ from flask import session, redirect, url_for, flash
 from flask_admin import Admin, AdminIndexView, expose
 from flask_admin.contrib.sqla import ModelView
 from bookingapp import app, db
-from bookingapp.models import Category, Product, User, TimeSlot, Booking, Bill
+from bookingapp.models import Category, Product, User, TimeSlot, Booking, Bill, Review
 from datetime import datetime
 from sqlalchemy import func
 from flask_admin.form import ImageUploadField
@@ -35,6 +35,9 @@ admin = Admin(
 app.secret_key = '@#$%%^^&&&*^%$##@@#^^&&B GVFCDXDVHNJHFCV()(*&^'
 app.config['FLASK_ADMIN_SWATCH'] = 'lux'
 
+class ReviewInlineModel(InlineFormAdmin):
+    form_columns = ['rating', 'content']
+
 # View chung có kiểm tra quyền
 class SecureModelView(ModelView):
     def is_accessible(self):
@@ -49,6 +52,7 @@ class CategoryView(SecureModelView):
     can_export = True
     column_searchable_list = ['id','name']
     column_filters = ['id','name']
+    column_list = ['id', 'name']
     form_columns = ['id', 'name']
     column_labels = {
         'name': 'Tên loại sân',
@@ -119,6 +123,7 @@ class ProductView(SecureModelView):
             namegen=lambda obj, file_data: file_data.filename
         )
     }
+    inline_models = [ReviewInlineModel(Review)]
 
     def on_model_delete(self, model):
         now = datetime.now()
@@ -137,16 +142,23 @@ class ProductView(SecureModelView):
             return redirect(url_for('.index_view'))
     def delete_model(self, model):
         try:
-            res = self.on_model_delete(model)
-            if res:
+            future_booking = Booking.query.filter(
+                Booking.product_id == model.id,
+                Booking.date >= datetime.now(),
+                Booking.status == 'confirmed'
+            ).first()
+
+            if future_booking:
+                flash("❌ Không thể xóa sân vì còn booking trong tương lai!", "danger")
                 return False
 
             self.session.delete(model)
             self.session.commit()
             return True
+
         except Exception as ex:
-            flash(str(ex), 'error')
             self.session.rollback()
+            flash(str(ex), "error")
             return False
 
 # Đăng ký tất cả view với SecureModelView

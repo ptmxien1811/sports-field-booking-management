@@ -46,8 +46,9 @@
 }
 
 .stat-value {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: bold;
+    word-break: break-word;
 }
 
 /* Màu sắc riêng cho từng loại thẻ */

@@ -13,25 +13,30 @@
     </header>
 
     <div class="stats-grid">
-        <div class="stat-card revenue">
-            <div class="stat-label">Doanh thu dự kiến</div>
-            <div class="stat-value">{{ "{:,.0f}".format(stats.total_revenue) }} VNĐ</div>
-        </div>
-
-        <div class="stat-card bookings">
-            <div class="stat-label">Lượt đặt sân</div>
-            <div class="stat-value">{{ stats.total_bookings }}</div>
-        </div>
-
-        <div class="stat-card products">
-            <div class="stat-label">Số lượng sân</div>
-            <div class="stat-value">{{ stats.total_products }}</div>
-        </div>
-
-        <div class="stat-card customers">
-            <div class="stat-label">Khách hàng</div>
-            <div class="stat-value">{{ stats.total_users }}</div>
-        </div>
+        <a href="/stats" class="stat-link">
+            <div class="stat-card revenue">
+                <div class="stat-label">Doanh thu dự kiến</div>
+                <div class="stat-value">{{ "{:,.0f}".format(stats.total_revenue) }} VNĐ</div>
+            </div>
+        </a>
+        <a href="/stats" class="stat-link">
+            <div class="stat-card bookings">
+                <div class="stat-label">Lượt đặt sân</div>
+                <div class="stat-value">{{ stats.total_bookings }}</div>
+            </div>
+        </a>
+        <a href="/stats" class="stat-link">
+            <div class="stat-card products">
+                <div class="stat-label">Số lượng sân</div>
+                <div class="stat-value">{{ stats.total_products }}</div>
+            </div>
+        </a>
+        <a href="/stats" class="stat-link">
+            <div class="stat-card customers">
+                <div class="stat-label">Khách hàng</div>
+                <div class="stat-value">{{ stats.total_users }}</div>
+            </div>
+        </a>
     </div>
 
     <div class="dashboard-footer">
@@ -39,7 +44,6 @@
             <h3>Lối tắt quản lý nhanh</h3>
             <ul class="quick-links">
                 <li><a href="/admin/product">📁 Quản lý Sân bóng</a></li>
-                <li><a href="/admin/user">👥 Kiểm tra Người dùng</a></li>
                 <li><a href="/">🌐 Quay lại trang khách</a></li>
             </ul>
         </div>

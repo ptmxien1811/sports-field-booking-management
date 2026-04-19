@@ -86,3 +86,7 @@
     background: #2575fc;
     color: white;
 }
+
+.stat-link {
+    text-decoration: none;
+}

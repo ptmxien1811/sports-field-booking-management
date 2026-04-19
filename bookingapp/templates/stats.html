@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Báo cáo doanh thu</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stats.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>BÁO CÁO DOANH THU</h1>
+
+<div class="stats-box">
+    <div class="card">
+        <h3>Tổng doanh thu</h3>
+        <p>{{ "{:,.0f}".format(total_revenue) }} VNĐ</p>
+    </div>
+
+    <div class="card">
+        <h3>Số lượt đặt</h3>
+        <p>{{ total_bookings }}</p>
+    </div>
+</div>
+
+<div class="chart-container">
+
+    <div class="chart-buttons">
+        <button onclick="showBar()">Biểu đồ cột</button>
+        <button onclick="showPie()">Biểu đồ tròn</button>
+    </div>
+
+    <canvas id="chart"></canvas>
+
+</div>
+
+</div>
+
+<script>
+let chart;
+
+const labels = {{ labels | tojson }};
+const dataValues = {{ values | tojson }};
+
+function showBar() {
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('chart'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Doanh thu',
+                data: dataValues
+            }]
+        }
+    });
+}
+
+function showPie() {
+    if (chart) chart.destroy();
+    chart = new Chart(document.getElementById('chart'), {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues
+            }]
+        }
+    });
+}
+
+showBar();
+</script>
+
+</body>
+</html>

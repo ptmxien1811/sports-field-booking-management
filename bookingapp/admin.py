@@ -110,7 +110,7 @@ class ProductView(SecureModelView):
         'category': 'Loại sân'
     }
     column_sortable_list = ['id','name', 'price']
-    form_excluded_columns = ['bookings', 'favorites', 'amenities']
+    form_excluded_columns = ['bookings', 'favorites', 'amenities', 'reviews']
     form_extra_fields = {
         'image': ImageUploadField(
             'Ảnh',

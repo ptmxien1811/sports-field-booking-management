@@ -12,6 +12,22 @@
 
 <h1>BÁO CÁO DOANH THU</h1>
 
+<div class="filter-box">
+    <form method="GET" action="/stats" class="date-filter-form">
+        <div class="date-group">
+            <label>Từ</label>
+            <input type="date" id="start_date" name="start_date" value="{{ start_date }}" max="{{ today }}">
+        </div>
+
+        <div class="date-group">
+            <label>Đến</label>
+            <input type="date" id="end_date" name="end_date" value="{{ end_date }}" max="{{ today }}">
+        </div>
+
+        <button type="submit">Lọc</button>
+    </form>
+</div>
+
 <div class="stats-box">
     <div class="card">
         <h3>Tổng doanh thu</h3>
@@ -71,6 +87,32 @@ function showPie() {
 }
 
 showBar();
+
+const startDate = document.getElementById("start_date");
+const endDate   = document.getElementById("end_date");
+
+// Khi đổi "Từ ngày"
+startDate.addEventListener("change", function () {
+    if (endDate.value && startDate.value > endDate.value) {
+        endDate.value = startDate.value; // auto kéo lên cho hợp lệ
+    }
+});
+
+// Khi đổi "Đến ngày"
+endDate.addEventListener("change", function () {
+    if (startDate.value && endDate.value < startDate.value) {
+        startDate.value = endDate.value; // auto chỉnh lại
+    }
+});
+
+startDate.addEventListener("change", function () {
+    endDate.min = startDate.value;
+});
+
+endDate.addEventListener("change", function () {
+    startDate.max = endDate.value;
+});
+
 </script>
 
 </body>

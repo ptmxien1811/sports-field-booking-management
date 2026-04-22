@@ -39,7 +39,7 @@ function checkStrength(input, barId, lblId, rulesId) {
         upp: /[A-Z]/.test(val),
         low: /[a-z]/.test(val),
         num: /\d/.test(val),
-        spc: /[!@#$%^&*()\-_=+\[\]{};:'",.<>?\/\\|`~]/.test(val),
+        spc: /[!@#$%^&*()\-_=+\[\]{};\':"\\|,.<>\/?`~]/.test(val),
     };
 
     // Update checklist icons

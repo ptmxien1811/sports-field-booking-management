@@ -31,8 +31,8 @@
     <div class="venue-card" style="position: relative;">
         <img src="{{ url_for('static', filename='image/' ~ product.image) }}" alt="{{ product.name }}">
         <h3>{{ product.name }}</h3>
-        <p>Địa chỉ: {{ product.category.address }}</p>
-        <p>SĐT: {{ product.category.phone }}</p>
+        <p>Địa chỉ: {{ product.category_id.address }}</p>
+        <p>SĐT: {{ product.category_id.phone }}</p>
         <p class="product-price">Giá: {{ "{:,.0f}".format(product.price) }}đ</p>
 
         <div class="hidden-amenities" style="display: none;">

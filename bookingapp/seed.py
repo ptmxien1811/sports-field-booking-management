@@ -207,13 +207,16 @@ if __name__ == "__main__":
             ))
 
         def seed_bills(users, products):
+            methods = ['direct', 'online']
             for i in range(40):
                 u = random.choice(users)
                 p = random.choice(products)
                 bill = Bill(
                     user_id=u.id,
                     product_id=p.id,
+                    booking_id=None,
                     amount=p.price,
+                    payment_method=random.choice(methods),
                     created_at=datetime.now() - timedelta(days=random.randint(0, 15))
                 )
                 db.session.add(bill)

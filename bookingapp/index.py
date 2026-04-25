@@ -32,13 +32,21 @@ def home():
     bookings     = []
     favorites    = []
     favorite_ids = []
+    paid_booking_ids = []
     if user_id:
         bookings     = get_bookings_by_user(user_id)
         favorites    = get_favorites_by_user(user_id)
         favorite_ids = [f.product_id for f in favorites]
+        # Tìm những booking đã thanh toán (đã có Bill)
+        if bookings:
+            b_ids = [b.id for b in bookings]
+            paid_bills = Bill.query.filter(Bill.booking_id.in_(b_ids)).all()
+            paid_booking_ids = [bill.booking_id for bill in paid_bills]
+
     return render_template("index.html",
                            products=products,
                            bookings=bookings,
+                           paid_booking_ids=paid_booking_ids,
                            favorites=favorites,
                            favorite_ids=favorite_ids,
                            username=username)
@@ -422,6 +430,7 @@ def cancel_booking_final(id):
     if not booking or booking.user_id != user_id:
         flash("Không tìm thấy hoặc bạn không có quyền!", "danger")
         return redirect(url_for("home", _anchor="booked"))
+
     now_time = datetime.now()
     if now_time > booking.end_time:
         flash("Đã sử dụng, không thể hủy!", "info")
@@ -433,9 +442,21 @@ def cancel_booking_final(id):
         if booking.start_time - now_time < timedelta(hours=2):
             flash("Sắp tới giờ sử dụng, không được hủy!", "warning")
             return redirect(url_for("home", _anchor="booked"))
+
+    # Kiểm tra xem đã thanh toán chưa → nếu rồi thì hoàn tiền (xóa bill)
+    existing_bill = Bill.query.filter_by(booking_id=id).first()
+    refunded = False
+    if existing_bill:
+        db.session.delete(existing_bill)
+        refunded = True
+
     db.session.delete(booking)
     db.session.commit()
-    flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
+
+    if refunded:
+        flash("Hoàn tiền thành công! Đã hủy sân và xóa hóa đơn.", "success")
+    else:
+        flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
     return redirect(url_for("home", _anchor="booked"))
 
 
@@ -573,6 +594,72 @@ def api_change_password():
     db.session.commit()
     return jsonify({"ok": True})
 
+
+# ===== TRANG THANH TOÁN =====
+@app.route("/payment/<int:booking_id>")
+def payment_page(booking_id):
+    user_id = session.get("user_id")
+    if not user_id:
+        flash("Vui lòng đăng nhập để thanh toán", "danger")
+        return redirect(url_for("login"))
+
+    booking = Booking.query.get(booking_id)
+    if not booking or booking.user_id != user_id:
+        flash("Không tìm thấy đơn đặt sân", "danger")
+        return redirect(url_for("home"))
+
+    # Kiểm tra đã thanh toán chưa
+    existing_bill = Bill.query.filter_by(booking_id=booking_id).first()
+    is_paid = existing_bill is not None
+
+    user = db.session.get(User, user_id)
+    product = booking.product
+
+    return render_template("payment.html",
+                           booking=booking,
+                           user=user,
+                           product=product,
+                           username=session.get("username"),
+                           is_paid=is_paid,
+                           bill=existing_bill)
+
+
+# ===== API: XỬ LÝ THANH TOÁN =====
+@app.route("/api/payment", methods=["POST"])
+def api_payment():
+    user_id = session.get("user_id")
+    if not user_id:
+        return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
+
+    data = request.json
+    booking_id     = data.get("booking_id")
+    payment_method = data.get("payment_method", "direct")
+
+    booking = Booking.query.get(booking_id)
+    if not booking or booking.user_id != user_id:
+        return jsonify({"ok": False, "msg": "Không tìm thấy đơn đặt sân"}), 404
+
+    # Kiểm tra đã thanh toán chưa
+    existing_bill = Bill.query.filter_by(booking_id=booking_id).first()
+    if existing_bill:
+        return jsonify({"ok": False, "msg": f"Đã thanh toán rồi! Mã hóa đơn: #{existing_bill.id}"}), 400
+
+    # Tạo hóa đơn mới
+    bill = Bill(
+        user_id=user_id,
+        product_id=booking.product_id,
+        booking_id=booking.id,
+        amount=booking.product.price,
+        payment_method=payment_method
+    )
+    db.session.add(bill)
+    db.session.commit()
+
+    return jsonify({
+        "ok": True,
+        "msg": f"Thanh toán thành công! Mã hóa đơn của bạn là #{bill.id}",
+        "bill_id": bill.id
+    })
 
 
 @app.route("/stats")

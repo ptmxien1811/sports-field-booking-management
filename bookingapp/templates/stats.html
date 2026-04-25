@@ -76,26 +76,32 @@
         </div>
         {% endfor %}
     </div>
-
-    <!-- Biểu đồ tròn doanh thu theo loại sân -->
-    <div class="cat-chart-container">
-        <canvas id="catChart"></canvas>
-    </div>
     {% else %}
     <p class="no-data">Không có dữ liệu trong khoảng thời gian này</p>
     {% endif %}
 </div>
 
-<!-- ===== BIỂU ĐỒ DOANH THU THEO NGÀY ===== -->
-<div class="chart-container">
-    <h2>Biểu đồ doanh thu theo ngày</h2>
+<!-- ===== 2 BIỂU ĐỒ NẰM NGANG ===== -->
+<div class="charts-row">
 
-    <div class="chart-buttons">
-        <button onclick="showBar()">Biểu đồ cột</button>
-        <button onclick="showPie()">Biểu đồ tròn</button>
+    <!-- Biểu đồ tròn theo loại sân (TRÁI) -->
+    <div class="chart-box">
+        <h2>Doanh thu theo loại sân</h2>
+        <div class="cat-chart-container">
+            <canvas id="catChart"></canvas>
+        </div>
     </div>
 
-    <canvas id="chart"></canvas>
+    <!-- Biểu đồ doanh thu theo ngày (PHẢI) -->
+    <div class="chart-box">
+        <h2>Doanh thu theo ngày</h2>
+        <div class="chart-buttons">
+            <button onclick="showBar()">Biểu đồ cột</button>
+            <button onclick="showPie()">Biểu đồ tròn</button>
+        </div>
+        <canvas id="chart"></canvas>
+    </div>
+
 </div>
 
 

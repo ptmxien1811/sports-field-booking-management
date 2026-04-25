@@ -152,3 +152,27 @@ class ProductView(SecureModelView):
 # Đăng ký tất cả view với SecureModelView
 admin.add_view(CategoryView(Category, db.session))
 admin.add_view(ProductView(Product, db.session))
+
+
+class BillView(SecureModelView):
+    can_view_details = True
+    can_create = False       # Admin không tự tạo bill
+    can_edit = False         # Admin không sửa bill
+    can_delete = True        # Admin có thể xóa bill
+    can_export = True
+    column_list = ['id', 'user', 'product', 'booking_id', 'amount', 'payment_method', 'created_at']
+    column_searchable_list = ['id', 'payment_method']
+    column_filters = ['id', 'amount', 'payment_method', 'created_at']
+    column_sortable_list = ['id', 'amount', 'created_at']
+    column_labels = {
+        'id': 'Mã HĐ',
+        'user': 'Người dùng',
+        'product': 'Sân',
+        'booking_id': 'Mã đặt sân',
+        'amount': 'Số tiền',
+        'payment_method': 'Phương thức TT',
+        'created_at': 'Ngày tạo'
+    }
+
+
+admin.add_view(BillView(Bill, db.session, name='Bill'))

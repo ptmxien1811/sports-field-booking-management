@@ -17,7 +17,34 @@ h1 {
     color: #2c3e50;
 }
 
-/* Card */
+h2 {
+    color: #2c3e50;
+    margin-bottom: 15px;
+}
+
+/* ===== NÚT QUAY VỀ ADMIN ===== */
+.top-bar {
+    margin-bottom: 15px;
+}
+
+.btn-back {
+    display: inline-block;
+    padding: 10px 20px;
+    background: #2c3e50;
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+
+.btn-back:hover {
+    background: #1a252f;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 12px rgba(0,0,0,0.15);
+}
+
+/* ===== CARD TỔNG QUAN ===== */
 .stats-box {
     display: flex;
     gap: 20px;
@@ -43,15 +70,113 @@ h1 {
     font-weight: bold;
 }
 
-/* Chart */
+/* ===== SO SÁNH THÁNG TRƯỚC ===== */
+.growth {
+    font-size: 1.6rem;
+    font-weight: bold;
+}
+
+.growth-up {
+    color: #28a745;
+}
+
+.growth-down {
+    color: #dc3545;
+}
+
+.growth-neutral {
+    color: #7f8c8d;
+}
+
+.growth-detail {
+    display: block;
+    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #7f8c8d;
+    line-height: 1.5;
+}
+
+/* ===== DOANH THU THEO LOẠI SÂN ===== */
+.category-section {
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
+}
+
+.category-grid {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.cat-card {
+    flex: 1;
+    min-width: 200px;
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+}
+
+.cat-name {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 5px;
+}
+
+.cat-revenue {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #2575fc;
+    margin-bottom: 10px;
+}
+
+.cat-bar-bg {
+    background: #e9ecef;
+    border-radius: 4px;
+    height: 8px;
+    overflow: hidden;
+    margin-bottom: 5px;
+}
+
+.cat-bar-fill {
+    background: #2575fc;
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.cat-percent {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    text-align: right;
+}
+
+.cat-chart-container {
+    max-width: 400px;
+    margin: 20px auto 0;
+}
+
+.no-data {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 20px;
+    font-style: italic;
+}
+
+/* ===== CHART DOANH THU THEO NGÀY ===== */
 .chart-container {
     background: white;
     padding: 20px;
     border-radius: 12px;
     box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    margin-bottom: 30px;
 }
 
-/* Buttons */
+/* ===== CHART BUTTONS ===== */
 .chart-buttons {
     text-align: center;
     margin-bottom: 20px;

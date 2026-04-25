@@ -573,8 +573,15 @@ def api_change_password():
     db.session.commit()
     return jsonify({"ok": True})
 
+
+
 @app.route("/stats")
 def stats():
+    # ===== KIỂM TRA QUYỀN: Chỉ admin mới vào được =====
+    if not (session.get("username") and session.get("username").lower() == "admin"):
+        flash("Bạn không có quyền truy cập!", "danger")
+        return redirect(url_for("login"))
+
     start_date = request.args.get("start_date")
     end_date   = request.args.get("end_date")
     today = datetime.now().date()
@@ -584,23 +591,30 @@ def stats():
 
     # ===== XỬ LÝ START DATE =====
     if start_date:
-        start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
-
-        if start_dt > today:
-            start_dt = today
-
-        start = datetime.combine(start_dt, datetime.min.time())
+        try:
+            start_dt = datetime.strptime(start_date, "%Y-%m-%d").date()
+            if start_dt > today: start_dt = today
+            start = datetime.combine(start_dt, datetime.min.time())
+        except: pass
 
     # ===== XỬ LÝ END DATE =====
     if end_date:
-        end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+        try:
+            end_dt = datetime.strptime(end_date, "%Y-%m-%d").date()
+            if end_dt > today: end_dt = today
+            end = datetime.combine(end_dt, datetime.min.time()) + timedelta(days=1)
+        except: pass
 
-        if end_dt > today:
-            end_dt = today
+    # ===== RÀNG BUỘC: Ngày bắt đầu phải <= Ngày kết thúc =====
+    if start and end and start >= end:
+        # Nếu lỡ nhập ngược, ta đảo lại cho admin luôn
+        start, end = datetime.combine(end_dt, datetime.min.time()), datetime.combine(start_dt, datetime.min.time()) + timedelta(days=1)
+        start_date, end_date = end_date, start_date
 
-        end = datetime.combine(end_dt, datetime.min.time()) + timedelta(days=1)
 
-    # ===== QUERY =====
+
+
+    # ===== QUERY TỔNG =====
     query = db.session.query(Bill)
 
     if start:
@@ -614,7 +628,58 @@ def stats():
     total_revenue = sum(b.amount for b in bills)
     total_bookings = len(bills)
 
-    # ===== CHART =====
+    # ===== DOANH THU THEO LOẠI SÂN (CATEGORY) =====
+    from bookingapp.models import Category
+    cat_query = db.session.query(
+        Category.name,
+        func.sum(Bill.amount)
+    ).join(Product, Product.id == Bill.product_id) \
+     .join(Category, Category.id == Product.category_id)
+
+    if start:
+        cat_query = cat_query.filter(Bill.created_at >= start)
+    if end:
+        cat_query = cat_query.filter(Bill.created_at < end)
+
+    cat_revenue = cat_query.group_by(Category.name).all()
+
+    # Tính phần trăm theo từng loại sân
+    category_stats = []
+    for cat_name, cat_total in cat_revenue:
+        pct = round((cat_total / total_revenue * 100), 1) if total_revenue > 0 else 0
+        category_stats.append({
+            'name': cat_name,
+            'revenue': cat_total,
+            'percent': pct
+        })
+
+    cat_labels = [c['name'] for c in category_stats]
+    cat_values = [c['revenue'] for c in category_stats]
+
+    # ===== SO SÁNH VỚI THÁNG TRƯỚC =====
+    first_of_this_month = today.replace(day=1)
+    last_month_end = first_of_this_month - timedelta(days=1)
+    first_of_last_month = last_month_end.replace(day=1)
+
+    # Doanh thu tháng này (tính đến hôm nay)
+    this_month_rev = db.session.query(func.sum(Bill.amount)).filter(
+        Bill.created_at >= datetime.combine(first_of_this_month, datetime.min.time()),
+        Bill.created_at <= datetime.combine(today, datetime.min.time()) + timedelta(days=1)
+    ).scalar() or 0
+
+    # Doanh thu tháng trước (toàn bộ tháng)
+    last_month_rev = db.session.query(func.sum(Bill.amount)).filter(
+        Bill.created_at >= datetime.combine(first_of_last_month, datetime.min.time()),
+        Bill.created_at < datetime.combine(first_of_this_month, datetime.min.time())
+    ).scalar() or 0
+
+    # Tính % thay đổi
+    if last_month_rev > 0:
+        growth_pct = round(((this_month_rev - last_month_rev) / last_month_rev) * 100, 1)
+    else:
+        growth_pct = 100.0 if this_month_rev > 0 else 0.0
+
+    # ===== CHART DOANH THU THEO NGÀY =====
     revenue_query = db.session.query(
         func.date(Bill.created_at),
         func.sum(Bill.amount)
@@ -640,10 +705,19 @@ def stats():
         total_bookings=total_bookings,
         labels=labels,
         values=values,
+        category_stats=category_stats,
+        cat_labels=cat_labels,
+        cat_values=cat_values,
+        this_month_rev=this_month_rev,
+        last_month_rev=last_month_rev,
+        growth_pct=growth_pct,
         start_date=start_date or "",
         end_date=end_date or "",
         today=today.strftime("%Y-%m-%d")
     )
+
+
+
 @app.route("/favorites")
 def favorites():
     return render_template("favorites.html", username=session.get('username'))

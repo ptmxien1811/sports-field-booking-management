@@ -76,6 +76,9 @@ class User(BaseModel):
         pattern = r'^(0[3-9][0-9]{8})$'
         return bool(re.match(pattern, phone))
 
+    def __str__(self):
+        return self.username
+
 
 # ================= AMENITY / TIMESLOT / PRODUCT =================
 class Amenity(BaseModel):
@@ -177,18 +180,20 @@ class Review(BaseModel):
         return "★" * self.rating + "☆" * (5 - self.rating)
 
 
-# ===== BILL =====
+# ===== BILL (HÓA ĐƠN THANH TOÁN) =====
 class Bill(BaseModel):
     __tablename__ = 'bill'
 
-    user_id    = Column(Integer, ForeignKey('user.id'))
-    product_id = Column(Integer, ForeignKey('products.id'))
-
-    amount     = Column(Float, nullable=False)
-    created_at = Column(DateTime, default=datetime.now)
+    user_id        = Column(Integer, ForeignKey('user.id'), nullable=False)
+    product_id     = Column(Integer, ForeignKey('products.id'), nullable=False)
+    booking_id     = Column(Integer, ForeignKey('booking.id'), nullable=True)
+    amount         = Column(Float, nullable=False)
+    payment_method = Column(String(50), default='direct')  # 'direct' hoặc 'online'
+    created_at     = Column(DateTime, default=datetime.now)
 
     user    = relationship("User")
     product = relationship("Product")
+    booking = relationship("Booking")
 
     def __str__(self):
         return f"Bill #{self.id} - {self.amount}"

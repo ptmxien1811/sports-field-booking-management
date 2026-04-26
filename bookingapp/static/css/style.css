@@ -382,6 +382,90 @@ form{
     background-color: #990000;
 }
 
+/* ===== BOOKING ACTIONS (Nút HỦY + THANH TOÁN + XEM HĐ) ===== */
+.booking-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.booking-actions form,
+.booking-actions .payment-link,
+.booking-actions .view-bill-link {
+    flex: 1 1 calc(50% - 3px);
+}
+
+.booking-actions .cancel-btn,
+.booking-actions .payment-btn,
+.booking-actions .view-bill-btn {
+    margin-top: 0;
+    width: 100%;
+    padding: 9px 8px;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 13px;
+    cursor: pointer;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.booking-actions .cancel-btn {
+    background-color: #004080;
+    color: white;
+}
+
+.booking-actions .cancel-btn:hover {
+    background-color: #990000;
+}
+
+.payment-btn {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    padding: 9px 8px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.payment-btn:hover {
+    background-color: #1e7e34;
+}
+
+.view-bill-link {
+    flex: 1 1 100% !important;
+    text-decoration: none;
+    display: block;
+}
+
+.view-bill-btn {
+    background-color: #004080;
+    color: white;
+    border: none;
+    padding: 9px 8px;
+    cursor: pointer;
+    width: 100%;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 13px;
+}
+
+.view-bill-btn:hover {
+    background-color: #002d5a;
+}
+
+.disabled-btn {
+    background-color: #e0e0e0 !important;
+    color: #888 !important;
+    cursor: not-allowed !important;
+    opacity: 0.7;
+    pointer-events: none;
+}
+
 /* ===== TOP BAR ===== */
 .top-bar {
     position: fixed;

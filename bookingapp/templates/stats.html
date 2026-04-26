@@ -10,8 +10,14 @@
 
 <div class="container">
 
+<!-- Nút quay về trang Admin -->
+<div class="top-bar">
+    <a href="/admin/" class="btn-back">← Quay về trang Admin</a>
+</div>
+
 <h1>BÁO CÁO DOANH THU</h1>
 
+<!-- ===== BỘ LỌC NGÀY ===== -->
 <div class="filter-box">
     <form method="GET" action="/stats" class="date-filter-form">
         <div class="date-group">
@@ -28,6 +34,7 @@
     </form>
 </div>
 
+<!-- ===== CARD TỔNG QUAN ===== -->
 <div class="stats-box">
     <div class="card">
         <h3>Tổng doanh thu</h3>
@@ -38,18 +45,66 @@
         <h3>Số lượt đặt</h3>
         <p>{{ total_bookings }}</p>
     </div>
+
+    <!-- Card so sánh tháng trước -->
+    <div class="card">
+        <h3>So với tháng trước</h3>
+        <p class="growth {% if growth_pct > 0 %}growth-up{% elif growth_pct < 0 %}growth-down{% else %}growth-neutral{% endif %}">
+            {% if growth_pct > 0 %}▲{% elif growth_pct < 0 %}▼{% else %}—{% endif %}
+            {{ growth_pct }}%
+        </p>
+        <span class="growth-detail">
+            Tháng này: {{ "{:,.0f}".format(this_month_rev) }} VNĐ<br>
+            Tháng trước: {{ "{:,.0f}".format(last_month_rev) }} VNĐ
+        </span>
+    </div>
 </div>
 
-<div class="chart-container">
+<!-- ===== DOANH THU THEO LOẠI SÂN ===== -->
+<div class="category-section">
+    <h2>Doanh thu theo loại sân</h2>
+    {% if category_stats %}
+    <div class="category-grid">
+        {% for cat in category_stats %}
+        <div class="cat-card">
+            <div class="cat-name">{{ cat.name }}</div>
+            <div class="cat-revenue">{{ "{:,.0f}".format(cat.revenue) }} VNĐ</div>
+            <div class="cat-bar-bg">
+                <div class="cat-bar-fill" style="width: {{ cat.percent }}%"></div>
+            </div>
+            <div class="cat-percent">{{ cat.percent }}%</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="no-data">Không có dữ liệu trong khoảng thời gian này</p>
+    {% endif %}
+</div>
 
-    <div class="chart-buttons">
-        <button onclick="showBar()">Biểu đồ cột</button>
-        <button onclick="showPie()">Biểu đồ tròn</button>
+<!-- ===== 2 BIỂU ĐỒ NẰM NGANG ===== -->
+<div class="charts-row">
+
+    <!-- Biểu đồ tròn theo loại sân (TRÁI) -->
+    <div class="chart-box">
+        <h2>Doanh thu theo loại sân</h2>
+        <div class="cat-chart-container">
+            <canvas id="catChart"></canvas>
+        </div>
     </div>
 
-    <canvas id="chart"></canvas>
+    <!-- Biểu đồ doanh thu theo ngày (PHẢI) -->
+    <div class="chart-box">
+        <h2>Doanh thu theo ngày</h2>
+        <div class="chart-buttons">
+            <button onclick="showBar()">Biểu đồ cột</button>
+            <button onclick="showPie()">Biểu đồ tròn</button>
+        </div>
+        <canvas id="chart"></canvas>
+    </div>
 
 </div>
+
+
 
 </div>
 
@@ -66,9 +121,16 @@ function showBar() {
         data: {
             labels: labels,
             datasets: [{
-                label: 'Doanh thu',
-                data: dataValues
+                label: 'Doanh thu (VNĐ)',
+                data: dataValues,
+                backgroundColor: 'rgba(37, 117, 252, 0.7)',
+                borderColor: '#2575fc',
+                borderWidth: 1
             }]
+        },
+        options: {
+            responsive: true,
+            scales: { y: { beginAtZero: true } }
         }
     });
 }
@@ -88,30 +150,61 @@ function showPie() {
 
 showBar();
 
+// ===== BIỂU ĐỒ TRÒN THEO LOẠI SÂN =====
+const catLabels = {{ cat_labels | tojson }};
+const catValues = {{ cat_values | tojson }};
+
+if (catLabels.length > 0) {
+    new Chart(document.getElementById('catChart'), {
+        type: 'doughnut',
+        data: {
+            labels: catLabels,
+            datasets: [{
+                data: catValues,
+                backgroundColor: ['#2575fc', '#28a745', '#ff6b6b', '#ffc107', '#6f42c1', '#17a2b8']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            }
+        }
+    });
+}
+
+// ===== VALIDATE NGÀY =====
 const startDate = document.getElementById("start_date");
 const endDate   = document.getElementById("end_date");
 
-// Khi đổi "Từ ngày"
+function validateDates() {
+    if (startDate.value && endDate.value) {
+        if (startDate.value > endDate.value) {
+            // Thay vì chỉ auto chỉnh, ta có thể báo cho người dùng biết
+            console.log("Ngày bắt đầu không được lớn hơn ngày kết thúc");
+            endDate.style.borderColor = "red";
+        } else {
+            endDate.style.borderColor = "#ccc";
+        }
+    }
+}
+
 startDate.addEventListener("change", function () {
+    validateDates();
     if (endDate.value && startDate.value > endDate.value) {
-        endDate.value = startDate.value; // auto kéo lên cho hợp lệ
+        endDate.value = startDate.value;
     }
-});
-
-// Khi đổi "Đến ngày"
-endDate.addEventListener("change", function () {
-    if (startDate.value && endDate.value < startDate.value) {
-        startDate.value = endDate.value; // auto chỉnh lại
-    }
-});
-
-startDate.addEventListener("change", function () {
     endDate.min = startDate.value;
 });
 
 endDate.addEventListener("change", function () {
+    validateDates();
+    if (startDate.value && endDate.value < startDate.value) {
+        startDate.value = endDate.value;
+    }
     startDate.max = endDate.value;
 });
+
 
 </script>
 

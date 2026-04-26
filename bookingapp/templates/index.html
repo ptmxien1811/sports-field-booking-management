@@ -78,9 +78,24 @@
                     <p>Giá: {{ "{:,.0f}".format(b.product.price) }}đ</p>
                     <p>Thời gian: {{ b.start_time }} - {{ b.end_time }}</p>
 
-                    <form method="post" action="/api/cancel-booking/{{ b.id }}">
-                        <button class="cancel-btn">HỦY SÂN</button>
-                    </form>
+                    <div class="booking-actions">
+                        {% if b.id in paid_booking_ids %}
+                            <form method="post" action="/api/cancel-booking/{{ b.id }}">
+                                <button class="cancel-btn">HỦY SÂN</button>
+                            </form>
+                            <button class="payment-btn disabled-btn" disabled>ĐÃ THANH TOÁN</button>
+                            <a href="/payment/{{ b.id }}" class="view-bill-link">
+                                <button class="view-bill-btn">📄 XEM HÓA ĐƠN</button>
+                            </a>
+                        {% else %}
+                            <form method="post" action="/api/cancel-booking/{{ b.id }}">
+                                <button class="cancel-btn">HỦY SÂN</button>
+                            </form>
+                            <a href="/payment/{{ b.id }}" class="payment-link">
+                                <button class="payment-btn">THANH TOÁN</button>
+                            </a>
+                        {% endif %}
+                    </div>
                 </div>
             {% endfor %}
         </div>

@@ -1,3 +1,6 @@
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 from flask import render_template, session, redirect, url_for, request, flash, jsonify
 from bookingapp import app, db
 from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,

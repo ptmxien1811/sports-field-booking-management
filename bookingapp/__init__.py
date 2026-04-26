@@ -12,5 +12,3 @@ app.secret_key = 'super_secret_key'
 
 db = SQLAlchemy(app)
 
-# THÊM DÒNG NÀY VÀO CUỐI FILE
-from bookingapp import index  # noqa: E402, F401

@@ -4,21 +4,20 @@ Dự án: Quản lý đặt sân thể thao
 """
 
 import pytest
-from bookingapp import app as flask_app, db
+from bookingapp import db
+from bookingapp.index import register_routes
 from bookingapp.models import User, Category, Product, Booking, Bill, Review, TimeSlot, Favorite
 from datetime import datetime, timedelta
-
-
-# ─── Configure app for testing ───────────────────────────────────────────────
+from flask import Flask
 
 def create_app():
-    """Dùng app thật từ bookingapp nhưng override config cho test."""
-    flask_app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    flask_app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    flask_app.config["TESTING"] = True
-    flask_app.config["WTF_CSRF_ENABLED"] = False
-    flask_app.secret_key = "test_secret_key_for_testing_only"
-    return flask_app
+    from bookingapp import app
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config["TESTING"] = True
+    app.config["WTF_CSRF_ENABLED"] = False
+    app.secret_key = "test_secret_key"
+    register_routes(app)
+    return app
 
 
 # ─── Fixtures cốt lõi ────────────────────────────────────────────────────────

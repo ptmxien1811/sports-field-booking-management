@@ -3,20 +3,47 @@
 # ============================================================
 
 import pytest
-import sys
-import os
-
-# Đảm bảo import test_base trước để monkey-patch
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-
-from bookingapp.test.test_base import (
-    test_app, clean_db, test_client, test_session
-)
-
-from bookingapp.models import (
-    Category, Product, User, Booking, Bill
-)
+from flask import Flask
+import bookingapp
+from bookingapp import db
+from bookingapp.models import Category, Product, User, Booking, Bill
+from bookingapp.test.test_base import test_client, test_session
 from datetime import datetime, timedelta
+
+
+# ============================================================
+# OVERRIDE test_app: thêm monkey-patch để routes đăng ký đúng app
+# ============================================================
+
+if not hasattr(bookingapp, '_test_app_patched'):
+    _app = Flask('bookingapp')
+    _app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    _app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    _app.config["TESTING"] = True
+    _app.config["WTF_CSRF_ENABLED"] = False
+    _app.secret_key = "test_secret_key_for_testing_only"
+
+    bookingapp.app = _app
+    bookingapp.db = db
+    db.init_app(_app)
+
+    with _app.app_context():
+        from bookingapp import models, admin, index
+        db.create_all()
+
+    bookingapp._test_app_patched = True
+else:
+    _app = bookingapp.app
+
+
+@pytest.fixture(scope="function")
+def test_app():
+    """Override test_app: dùng app đã monkey-patch"""
+    with _app.app_context():
+        db.create_all()
+        yield _app
+        db.session.remove()
+        db.drop_all()
 
 
 # ============================================================

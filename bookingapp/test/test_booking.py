@@ -13,7 +13,7 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ''))
 
-from test_base import (
+from bookingapp.test.test_base import  (
     test_app, test_client, test_session,
     sample_category, sample_product,
     logged_in_user, logged_in_client,

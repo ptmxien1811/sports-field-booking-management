@@ -11,11 +11,15 @@ from datetime import datetime, timedelta
 from flask import Flask
 
 def create_app():
-    from bookingapp import app
+    from bookingapp import app, db
+    from bookingapp.index import register_routes
+
+    # Chỉ override config, KHÔNG gọi db.init_app lại
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     app.config["TESTING"] = True
     app.config["WTF_CSRF_ENABLED"] = False
     app.secret_key = "test_secret_key"
+
     register_routes(app)
     return app
 

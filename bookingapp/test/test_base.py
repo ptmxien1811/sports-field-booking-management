@@ -4,37 +4,27 @@ Dự án: Quản lý đặt sân thể thao
 """
 
 import pytest
-from flask import Flask
-from bookingapp import db
+from bookingapp import app as flask_app, db
 from bookingapp.models import User, Category, Product, Booking, Bill, Review, TimeSlot, Favorite
 from datetime import datetime, timedelta
 
 
-# ─── Tạo Flask app với SQLite in-memory ──────────────────────────────────────
+# ─── Configure app for testing ───────────────────────────────────────────────
 
 def create_app():
-    """Factory: Flask app dùng SQLite in-memory, không động đến DB thật."""
-    app = Flask(__name__)
-    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["TESTING"] = True
-    app.config["WTF_CSRF_ENABLED"] = False
-    app.secret_key = "test_secret_key_for_testing_only"
-
-    db.init_app(app)
-
-    # Đăng ký routes từ index.py
-    with app.app_context():
-        from bookingapp import index  # noqa: F401 – import để routes được đăng ký
-
-    return app
+    """Dùng app thật từ bookingapp nhưng override config cho test."""
+    flask_app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    flask_app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
+    flask_app.config["TESTING"] = True
+    flask_app.config["WTF_CSRF_ENABLED"] = False
+    flask_app.secret_key = "test_secret_key_for_testing_only"
+    return flask_app
 
 
 # ─── Fixtures cốt lõi ────────────────────────────────────────────────────────
 
 @pytest.fixture(scope="function")
 def test_app():
-    """App fixture: tạo schema trước mỗi test, xóa sau."""
     app = create_app()
     with app.app_context():
         db.create_all()
@@ -45,13 +35,11 @@ def test_app():
 
 @pytest.fixture(scope="function")
 def test_client(test_app):
-    """Flask test client."""
     return test_app.test_client()
 
 
 @pytest.fixture(scope="function")
 def test_session(test_app):
-    """SQLAlchemy session, rollback sau mỗi test."""
     with test_app.app_context():
         yield db.session
         db.session.rollback()
@@ -61,7 +49,6 @@ def test_session(test_app):
 
 @pytest.fixture
 def sample_category(test_session):
-    """Category mẫu."""
     c = Category(name="Sân bóng đá")
     test_session.add(c)
     test_session.commit()
@@ -70,7 +57,6 @@ def sample_category(test_session):
 
 @pytest.fixture
 def sample_product(test_session, sample_category):
-    """Product mẫu có TimeSlot."""
     p = Product(
         name="Sân Mini A",
         price=300_000,
@@ -78,11 +64,11 @@ def sample_product(test_session, sample_category):
         address="123 Đường Test, TP.HCM",
         phone="0901234567",
         active=True,
+        image="default.jpg"
     )
     test_session.add(p)
     test_session.commit()
 
-    # Thêm một số TimeSlot
     for label in ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00"]:
         ts = TimeSlot(product_id=p.id, label=label, period="morning")
         test_session.add(ts)
@@ -92,7 +78,6 @@ def sample_product(test_session, sample_category):
 
 @pytest.fixture
 def logged_in_user(test_session):
-    """User thường đã được tạo trong DB."""
     u = User(username="testuser", email="test@example.com", phone="0912345678", auth_type="local")
     u.set_password("Test@1234")
     test_session.add(u)
@@ -102,7 +87,6 @@ def logged_in_user(test_session):
 
 @pytest.fixture
 def admin_user(test_session):
-    """User admin."""
     u = User(username="admin", email="admin@example.com", auth_type="local")
     u.set_password("Admin@1234")
     test_session.add(u)
@@ -112,7 +96,6 @@ def admin_user(test_session):
 
 @pytest.fixture
 def logged_in_client(test_client, logged_in_user):
-    """Test client đã inject session user thường."""
     with test_client.session_transaction() as sess:
         sess["user_id"] = logged_in_user.id
         sess["username"] = logged_in_user.username
@@ -121,7 +104,6 @@ def logged_in_client(test_client, logged_in_user):
 
 @pytest.fixture
 def admin_client(test_client, admin_user):
-    """Test client đã inject session admin."""
     with test_client.session_transaction() as sess:
         sess["user_id"] = admin_user.id
         sess["username"] = "admin"
@@ -130,7 +112,6 @@ def admin_client(test_client, admin_user):
 
 @pytest.fixture
 def confirmed_booking(test_session, logged_in_user, sample_product):
-    """Booking confirmed trong tương lai (1 ngày sau)."""
     tomorrow = datetime.now() + timedelta(days=1)
     day_start = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
     start = tomorrow.replace(hour=9, minute=0, second=0, microsecond=0)
@@ -152,7 +133,6 @@ def confirmed_booking(test_session, logged_in_user, sample_product):
 
 @pytest.fixture
 def paid_booking(test_session, confirmed_booking, logged_in_user, sample_product):
-    """Booking đã thanh toán (có Bill kèm theo)."""
     bill = Bill(
         user_id=logged_in_user.id,
         product_id=sample_product.id,

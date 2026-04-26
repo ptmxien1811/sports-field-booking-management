@@ -4,9 +4,13 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql+pymysql://root:123456@localhost/bookingapp?charset=utf8mb4'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.secret_key = 'super_secret_key'
 
 db = SQLAlchemy(app)
+
+# THÊM DÒNG NÀY VÀO CUỐI FILE
+from bookingapp import index  # noqa: E402, F401

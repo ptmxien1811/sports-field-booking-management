@@ -6,7 +6,17 @@ Bao gồm: Unit test model validation, API test routes /register /login
 import pytest
 from bookingapp.models import User
 from bookingapp import db
-from test_base import test_app, test_client, test_session, logged_in_user
+from bookingapp.test.test_base import (
+    test_app,
+    test_client,
+    test_session,
+    logged_in_user,
+    admin_user,
+    logged_in_client,
+    admin_client,
+    confirmed_booking,
+    paid_booking,
+)
 
 
 # ═══════════════════════════════════════════════════════════════════

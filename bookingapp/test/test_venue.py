@@ -9,12 +9,11 @@ from bookingapp import db
 from bookingapp.dao import get_product_by_id, get_slots_for_product_date
 from datetime import datetime, timedelta, date as date_type
 
-from test_base import (
+from bookingapp.test.test_base import (
     test_app, test_client, test_session,
     sample_category, sample_product,
     logged_in_user, logged_in_client,
-    confirmed_booking,
-)
+    confirmed_booking,)
 
 
 # ═══════════════════════════════════════════════════════════════════

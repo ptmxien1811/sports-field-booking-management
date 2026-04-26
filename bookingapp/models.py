@@ -14,6 +14,7 @@ class BaseModel(db.Model):
 # ================= CATEGORY =================
 class Category(BaseModel):
     __tablename__ = 'category'
+    __table_args__ = {'extend_existing': True}
     name    = Column(String(100), nullable=False)
     products = relationship("Product", back_populates="category")
 
@@ -24,6 +25,7 @@ class Category(BaseModel):
 # ================= USER =================
 class User(BaseModel):
     __tablename__ = 'user'
+    __table_args__ = {'extend_existing': True}
 
     username     = Column(String(80),  unique=True, nullable=False)
     password     = Column(String(255), nullable=True)
@@ -83,6 +85,7 @@ class User(BaseModel):
 # ================= AMENITY / TIMESLOT / PRODUCT =================
 class Amenity(BaseModel):
     __tablename__ = 'amenity'
+    __table_args__ = {'extend_existing': True}
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     icon       = Column(String(10))
     label      = Column(String(100))
@@ -91,6 +94,7 @@ class Amenity(BaseModel):
 
 class TimeSlot(BaseModel):
     __tablename__ = 'time_slot'
+    __table_args__ = {'extend_existing': True}
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     period     = Column(String(20))
     label      = Column(String(20))
@@ -102,6 +106,7 @@ class TimeSlot(BaseModel):
 
 class Product(BaseModel):
     __tablename__ = 'products'
+    __table_args__ = {'extend_existing': True}
     name        = Column(String(100), nullable=False, unique=True)
     description = Column(Text, default="")
     price       = Column(Float, default=0)
@@ -132,6 +137,7 @@ class Product(BaseModel):
 # ================= BOOKING =================
 class Booking(BaseModel):
     __tablename__ = 'booking'
+    __table_args__ = {'extend_existing': True}
     user_id    = Column(Integer, ForeignKey('user.id'),     nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     slot_label = Column(String(20))
@@ -147,6 +153,7 @@ class Booking(BaseModel):
 # ================= FAVORITE =================
 class Favorite(BaseModel):
     __tablename__ = 'favorite'
+    __table_args__ = {'extend_existing': True}
     user_id    = Column(Integer, ForeignKey('user.id'),     nullable=False)
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
 
@@ -157,6 +164,7 @@ class Favorite(BaseModel):
 # ================= REVIEW =================
 class Review(BaseModel):
     __tablename__ = 'review'
+    __table_args__ = {'extend_existing': True}
     product_id = Column(Integer, ForeignKey('products.id'), nullable=False)
     user_id    = Column(Integer, ForeignKey('user.id'),     nullable=False)
     rating     = Column(Integer, default=5)
@@ -187,6 +195,7 @@ class Review(BaseModel):
 # ===== BILL (HÓA ĐƠN THANH TOÁN) =====
 class Bill(BaseModel):
     __tablename__ = 'bill'
+    __table_args__ = {'extend_existing': True}
 
     user_id        = Column(Integer, ForeignKey('user.id'), nullable=False)
     product_id     = Column(Integer, ForeignKey('products.id'), nullable=False)

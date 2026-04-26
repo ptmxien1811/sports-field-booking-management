@@ -26,6 +26,8 @@ GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_USER_URL  = "https://www.googleapis.com/oauth2/v3/userinfo"
 
 def register_routes(app):
+    # if "home" in app.view_functions:
+    #     app.view_functions.pop("home")
     # ===== HOME =====
     @app.route("/")
     def home():

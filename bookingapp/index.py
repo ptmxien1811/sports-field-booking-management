@@ -175,10 +175,12 @@ def login_phone():
         phone    = request.form.get("phone", "").strip()
         password = request.form.get("password", "")
         if not User.validate_phone(phone):
-            return render_template("login.html", error="Số điện thoại không hợp lệ")
+            flash("Số điện thoại không hợp lệ", "danger")   # ← dùng flash
+            return render_template("login.html")
         user = User.query.filter_by(phone=phone).first()
         if not user or not user.check_password(password):
-            return render_template("login.html", error="Số điện thoại hoặc mật khẩu không đúng")
+            flash("Số điện thoại hoặc mật khẩu không đúng", "danger")
+            return render_template("login.html")
         session["user_id"]  = user.id
         session["username"] = user.username
         return redirect(url_for("home"))
@@ -810,7 +812,7 @@ def stats():
 
 @app.route("/favorites")
 def favorites():
-    return render_template("favorites.html", username=session.get('username'))
+    return redirect(url_for("home", _anchor="favorites"))
 
 @app.route("/explore")
 def explore():

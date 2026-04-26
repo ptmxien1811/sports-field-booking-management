@@ -9,14 +9,19 @@ from bookingapp import db
 from bookingapp.dao import get_favorites_by_user, toggle_favorite
 from datetime import datetime, timedelta
 
-from test_base import (
-    test_app, test_client, test_session,
-    sample_category, sample_product,
-    logged_in_user, logged_in_client,
-    confirmed_booking, paid_booking,
-    admin_user, admin_client,
+from bookingapp.test.test_base import (
+    test_app,
+    test_client,
+    test_session,
+    sample_category,
+    sample_product,
+    logged_in_user,
+    admin_user,
+    logged_in_client,
+    admin_client,
+    confirmed_booking,
+    paid_booking,
 )
-
 
 # ═══════════════════════════════════════════════════════════════════
 # SECTION 1: API TEST – GET / (Trang chủ)

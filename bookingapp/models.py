@@ -68,7 +68,7 @@ class User(BaseModel):
 
     @staticmethod
     def validate_email(email):
-        pattern = r'^[\w\.-]+@[\w\.-]+\.\w{2,}$'
+        pattern = r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$"
         return bool(re.match(pattern, email))
 
     @staticmethod
@@ -168,13 +168,17 @@ class Review(BaseModel):
 
     @property
     def date_str(self):
-        delta = datetime.now() - self.created_at
-        if delta.days == 0:  return "Hôm nay"
-        if delta.days == 1:  return "1 ngày trước"
-        if delta.days < 7:   return f"{delta.days} ngày trước"
-        if delta.days < 30:  return f"{delta.days // 7} tuần trước"
-        return f"{delta.days // 30} tháng trước"
+        if self.created_at is None:
+            return "Hôm nay"
+        today = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+        created = self.created_at.replace(hour=0, minute=0, second=0, microsecond=0)
+        diff = (today - created).days
 
+        if diff <= 0:   return "Hôm nay"
+        if diff == 1:   return "1 ngày trước"
+        if diff < 7:    return f"{diff} ngày trước"
+        if diff < 30:   return f"{diff // 7} tuần trước"
+        return f"{diff // 30} tháng trước"
     @property
     def stars(self):
         return "★" * self.rating + "☆" * (5 - self.rating)

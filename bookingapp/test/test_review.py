@@ -4,18 +4,16 @@ Bao gồm: Unit test dao.add_review(), DB constraints, API test /api/review/<id>
 """
 
 import pytest
-from bookingapp.models import User, Review, Booking
+from bookingapp.models import User, Review, Booking, Category, Product
 from bookingapp import db
 from bookingapp.dao import add_review, has_booked_product, has_reviewed_product
 from datetime import datetime, timedelta
 
-from test_base import (
+from bookingapp.test.test_base import (
     test_app, test_client, test_session,
     sample_category, sample_product,
     logged_in_user, logged_in_client,
-    confirmed_booking,
-)
-
+    confirmed_booking,)
 
 # ═══════════════════════════════════════════════════════════════════
 # SECTION 1: UNIT TEST – Model Review

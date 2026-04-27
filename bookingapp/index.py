@@ -431,41 +431,18 @@ def register_routes(app):
 
     # ===== CANCEL BOOKING =====
     @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
+    @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
     def cancel_booking_final(id):
-        booking  = Booking.query.get(id)
-        user_id  = session.get("user_id")
-        if not booking or booking.user_id != user_id:
-            flash("Không tìm thấy hoặc bạn không có quyền!", "danger")
-            return redirect(url_for("home", _anchor="booked"))
+        user_id = session.get("user_id")
+        success = cancel_booking_by_id(id, user_id)
 
-        now_time = datetime.now()
-        if now_time > booking.end_time:
-            flash("Đã sử dụng, không thể hủy!", "info")
-            return redirect(url_for("home", _anchor="booked"))
-        if booking.start_time <= now_time <= booking.end_time:
-            flash("Đang trong giờ sử dụng, bạn không thể hủy lúc này!", "danger")
-            return redirect(url_for("home", _anchor="booked"))
-        if now_time < booking.start_time:
-            if booking.start_time - now_time < timedelta(hours=2):
-                flash("Sắp tới giờ sử dụng, không được hủy!", "warning")
-                return redirect(url_for("home", _anchor="booked"))
-
-        # Kiểm tra xem đã thanh toán chưa → nếu rồi thì hoàn tiền (xóa bill)
-        existing_bill = Bill.query.filter_by(booking_id=id).first()
-        refunded = False
-        if existing_bill:
-            db.session.delete(existing_bill)
-            refunded = True
-
-        db.session.delete(booking)
-        db.session.commit()
-
-        if refunded:
-            flash("Hoàn tiền thành công! Đã hủy sân và xóa hóa đơn.", "success")
+        if success:
+            db.session.commit()
+            flash("Đã hủy thành công!", "success")
         else:
-            flash("Hệ thống xác nhận: Đã hủy thành công!", "success")
-        return redirect(url_for("home", _anchor="booked"))
+            flash("Không thể hủy! (Sai user, quá giờ hoặc đang sử dụng)", "danger")
 
+        return redirect(url_for("home", _anchor="booked"))
 
 
     # ===== ACCOUNT PAGE =====

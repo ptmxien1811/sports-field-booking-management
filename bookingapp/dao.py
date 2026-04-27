@@ -14,7 +14,7 @@ def get_user_by_id(user_id):
 def get_bookings_by_user(user_id):
     return (Booking.query
             .options(joinedload(Booking.product).joinedload(Product.category))
-            .filter(Booking.user_id == user_id)
+            .filter(Booking.user_id == user_id, Booking.status == "confirmed")
             .order_by(Booking.date.desc())
             .all())
 

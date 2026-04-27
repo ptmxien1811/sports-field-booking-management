@@ -18,6 +18,7 @@ from bookingapp.test.test_base import (
     sample_category, sample_product,
     logged_in_user, logged_in_client,
     confirmed_booking, paid_booking,
+    admin_user, admin_client,
 )
 
 

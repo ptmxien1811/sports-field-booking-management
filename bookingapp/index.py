@@ -434,11 +434,18 @@ def register_routes(app):
     @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
     def cancel_booking_final(id):
         user_id = session.get("user_id")
+
+        # Kiểm tra có Bill (đã thanh toán) trước khi hủy
+        had_bill = Bill.query.filter_by(booking_id=id).first() is not None
+
         success = cancel_booking_by_id(id, user_id)
 
         if success:
             db.session.commit()
-            flash("Đã hủy thành công!", "success")
+            if had_bill:
+                flash("Đã hoàn tiền và hủy sân thành công!", "success")
+            else:
+                flash("Đã hủy thành công!", "success")
         else:
             flash("Không thể hủy! (Sai user, quá giờ hoặc đang sử dụng)", "danger")
 

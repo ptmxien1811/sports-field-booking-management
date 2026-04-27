@@ -32,6 +32,8 @@ if not hasattr(bookingapp, '_test_app_patched'):
 
     with _app.app_context():
         from bookingapp import models, admin, index
+        index.register_routes(_app)
+        admin.init_admin(_app, db)
         db.create_all()
 
     bookingapp._test_app_patched = True

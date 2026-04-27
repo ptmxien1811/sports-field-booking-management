@@ -2,7 +2,7 @@ import sys, os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
 
 from flask import render_template, session, redirect, url_for, request, flash, jsonify
-from bookingapp import app, db
+from bookingapp import app, db, dao
 from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,
                              get_slots_for_product_date, create_booking,
                              cancel_booking_by_id, toggle_favorite,
@@ -377,13 +377,14 @@ def register_routes(app):
 
 
     # ===== API: TOGGLE FAVORITE =====
-    @app.route("/api/favorite/<int:product_id>", methods=["POST"])
+    @app.route('/api/favorite/<int:product_id>', methods=['POST'])
     def api_favorite(product_id):
-        user_id = session.get("user_id")
-        if not user_id:
-            return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
-        added = toggle_favorite(user_id, product_id)
-        return jsonify({"ok": True, "added": added})
+        if 'user_id' not in session:
+            return jsonify({'ok': False}), 401
+        result = dao.toggle_favorite(session['user_id'], product_id)
+        if result is None:
+            return jsonify({'ok': False, 'msg': 'Sân không tồn tại'}), 404
+        return jsonify({'ok': True, 'added': result})
 
 
     # ===== API: GỬI ĐÁNH GIÁ =====
@@ -430,7 +431,7 @@ def register_routes(app):
 
 
     # ===== CANCEL BOOKING =====
-    @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
+
     @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
     def cancel_booking_final(id):
         user_id = session.get("user_id")
@@ -448,7 +449,7 @@ def register_routes(app):
             else:
                 flash("Đã hủy thành công!", "success")
         else:
-            flash("Không thể hủy! (Sai user, quá giờ hoặc đang sử dụng)", "danger")
+            flash("Không thể hủy!", "danger")
 
         return redirect(url_for("home", _anchor="booked"))
 
@@ -470,6 +471,9 @@ def register_routes(app):
         count = Booking.query.filter_by(user_id=user_id, status="confirmed").count()
         return jsonify({"bookings": count})
 
+    @app.route("/favorites")
+    def favorites():
+        return redirect(url_for("home", _anchor="favorites"))
 
     @app.route("/api/my-favorites")
     def api_my_favorites():
@@ -797,9 +801,6 @@ def register_routes(app):
 
 
 
-    @app.route("/favorites")
-    def favorites():
-        return redirect(url_for("home", _anchor="favorites"))
 
     @app.route("/explore")
     def explore():

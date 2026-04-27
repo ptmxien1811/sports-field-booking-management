@@ -170,6 +170,9 @@ def get_favorites_by_user(user_id):
 
 
 def toggle_favorite(user_id, product_id):
+    product = db.session.get(Product, product_id)
+    if not product:
+        return None
     fav = Favorite.query.filter_by(user_id=user_id, product_id=product_id).first()
     if fav:
         db.session.delete(fav)

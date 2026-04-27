@@ -145,6 +145,7 @@ class Booking(BaseModel):
     start_time = Column(DateTime, nullable=False)
     end_time   = Column(DateTime, nullable=False)
     status     = Column(String(20), default="confirmed")
+    group_id   = Column(String(50), nullable=True)  # Nhóm các booking cùng 1 lần đặt
 
     user    = relationship("User",    back_populates="bookings")
     product = relationship("Product", back_populates="bookings")

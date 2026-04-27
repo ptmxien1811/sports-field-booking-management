@@ -249,3 +249,86 @@ def get_product_by_id(product_id):
             )
             .filter_by(id=product_id)
             .first_or_404())
+
+
+# ===== GROUPED BOOKINGS (Hoá đơn nhóm) =====
+
+def get_grouped_bookings_by_user(user_id):
+    """
+    Gom các booking cùng group_id thành 1 nhóm.
+    Booking không có group_id (đặt lẻ) sẽ tự thành 1 nhóm riêng.
+    Trả về list of dict, mỗi dict chứa thông tin nhóm.
+    """
+    bookings = (Booking.query
+                .options(joinedload(Booking.product).joinedload(Product.category))
+                .filter(Booking.user_id == user_id, Booking.status == "confirmed")
+                .order_by(Booking.date.desc())
+                .all())
+
+    groups = {}
+    for b in bookings:
+        key = b.group_id if b.group_id else f"single_{b.id}"
+        if key not in groups:
+            groups[key] = {
+                "group_id": b.group_id,
+                "product": b.product,
+                "date": b.date,
+                "bookings": [],
+                "booking_ids": [],
+                "slot_labels": [],
+            }
+        groups[key]["bookings"].append(b)
+        groups[key]["booking_ids"].append(b.id)
+        groups[key]["slot_labels"].append(b.slot_label)
+
+    return list(groups.values())
+
+
+def cancel_grouped_booking(group_id, user_id):
+    """
+    Huỷ tất cả booking trong 1 group.
+    Trả về (success: bool, had_bill: bool)
+    - Nếu bất kỳ booking nào vi phạm thời gian → từ chối toàn bộ.
+    - Nếu có Bill → xoá Bill (hoàn tiền).
+    """
+    bookings = Booking.query.filter_by(group_id=group_id, status="confirmed").all()
+
+    if not bookings:
+        return False, False
+
+    # Kiểm tra tất cả booking thuộc cùng user
+    if any(b.user_id != user_id for b in bookings):
+        return False, False
+
+    now_time = datetime.now()
+
+    # Kiểm tra ràng buộc thời gian cho TỪNG booking trong nhóm
+    for b in bookings:
+        if now_time > b.end_time:
+            return False, False
+        if b.start_time <= now_time <= b.end_time:
+            return False, False
+        if now_time < b.start_time:
+            if b.start_time - now_time < timedelta(hours=2):
+                return False, False
+
+    # Qua hết chốt chặn → tiến hành huỷ
+    # Xoá Bill nếu có (dùng booking_id của bất kỳ booking nào trong nhóm)
+    booking_ids = [b.id for b in bookings]
+    existing_bill = Bill.query.filter(Bill.booking_id.in_(booking_ids)).first()
+    had_bill = existing_bill is not None
+    if existing_bill:
+        db.session.delete(existing_bill)
+
+    # Mở lại slot và huỷ từng booking
+    for b in bookings:
+        slot = TimeSlot.query.filter_by(
+            product_id=b.product_id,
+            label=b.slot_label
+        ).first()
+        if slot:
+            slot.active = True
+        b.status = "cancelled"
+
+    db.session.commit()
+    return True, had_bill

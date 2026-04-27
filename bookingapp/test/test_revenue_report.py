@@ -13,46 +13,12 @@ import bookingapp
 from bookingapp import db
 from bookingapp.models import User, Category, Product, Booking, Bill
 
-# ─── Monkey-patch: đảm bảo routes đăng ký đúng app test ─────────────────────
-
-if not hasattr(bookingapp, '_test_app_patched'):
-    _app = Flask('bookingapp')
-    _app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    _app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    _app.config["TESTING"] = True
-    _app.config["WTF_CSRF_ENABLED"] = False
-    _app.secret_key = "test_secret_key_for_testing_only"
-
-    bookingapp.app = _app
-    bookingapp.db = db
-    db.init_app(_app)
-
-    with _app.app_context():
-        from bookingapp import models, admin, index
-        db.create_all()
-
-    bookingapp._test_app_patched = True
-else:
-    _app = bookingapp.app
-
-# ─── Import fixtures từ test_base ────────────────────────────────────────────
 from bookingapp.test.test_base import (
-    test_client, test_session,
+    test_app, test_client, test_session,
     sample_category, sample_product,
     logged_in_user, logged_in_client,
-    admin_user, admin_client,
     confirmed_booking, paid_booking,
 )
-
-
-@pytest.fixture(scope="function")
-def test_app():
-    """Override test_app: dùng app đã monkey-patch."""
-    with _app.app_context():
-        db.create_all()
-        yield _app
-        db.session.remove()
-        db.drop_all()
 
 
 # ─── Fixtures bổ sung ────────────────────────────────────────────────────────

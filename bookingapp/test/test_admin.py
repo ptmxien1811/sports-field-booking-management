@@ -1,52 +1,89 @@
 """
 test_admin.py – Kiểm thử nghiệp vụ Admin
-Bao gồm: Unit test dao, API test Flask-Admin routes, UI test Dashboard
 """
 
 import pytest
-from flask import Flask
-import bookingapp
 from bookingapp import db
 from bookingapp.models import Product, Category, Booking, User, Bill, Favorite, TimeSlot
 from bookingapp.test.test_base import (
-    test_client, test_session,
+    admin_app,                          # ← fixture có Flask-Admin
     sample_category, sample_product,
-    logged_in_user, admin_user, admin_client,
+    logged_in_user, admin_user,
 )
 from datetime import datetime, timedelta
+from bookingapp.dao import get_all_bookings, get_all_favorites
 
 
-# ─── Monkey-patch: đảm bảo routes đăng ký đúng app test ─────────────────────
+# ─── Fixtures core dùng admin_app ────────────────────────────────────────────
 
-if not hasattr(bookingapp, '_test_app_patched'):
-    _app = Flask('bookingapp')
-    _app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
-    _app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    _app.config["TESTING"] = True
-    _app.config["WTF_CSRF_ENABLED"] = False
-    _app.secret_key = "test_secret_key_for_testing_only"
-
-    bookingapp.app = _app
-    bookingapp.db = db
-    db.init_app(_app)
-
-    with _app.app_context():
-        from bookingapp import models, admin, index
-        db.create_all()
-
-    bookingapp._test_app_patched = True
-else:
-    _app = bookingapp.app
+@pytest.fixture(scope="function")
+def test_app(admin_app):
+    return admin_app
 
 
 @pytest.fixture(scope="function")
-def test_app():
-    """Override test_app: dùng app đã monkey-patch"""
-    with _app.app_context():
-        db.create_all()
-        yield _app
-        db.session.remove()
-        db.drop_all()
+def test_client(test_app):
+    return test_app.test_client()
+
+
+@pytest.fixture(scope="function")
+def test_session(test_app):
+    with test_app.app_context():
+        yield db.session
+        db.session.rollback()
+
+
+@pytest.fixture
+def admin_client(test_app, admin_user):
+    client = test_app.test_client()
+    with client.session_transaction() as sess:
+        sess["user_id"] = admin_user.id
+        sess["username"] = "admin"
+    return client
+
+
+@pytest.fixture
+def non_admin_client(test_app, logged_in_user):
+    client = test_app.test_client()
+    with client.session_transaction() as sess:
+        sess["user_id"] = logged_in_user.id
+        sess["username"] = logged_in_user.username
+    return client
+
+
+@pytest.fixture
+def product_with_future_booking(test_session, sample_product, logged_in_user):
+    future = datetime.now() + timedelta(days=3)
+    day_start = future.replace(hour=0, minute=0, second=0, microsecond=0)
+    b = Booking(
+        user_id=logged_in_user.id,
+        product_id=sample_product.id,
+        slot_label="09:00 - 10:00",
+        date=day_start,
+        start_time=future.replace(hour=9),
+        end_time=future.replace(hour=10),
+        status="confirmed",
+    )
+    test_session.add(b)
+    test_session.commit()
+    return sample_product
+
+
+@pytest.fixture
+def seed_dashboard_data(test_session, admin_user, sample_product):
+    bill = Bill(user_id=admin_user.id, product_id=sample_product.id,
+                amount=100000, payment_method="direct")
+    test_session.add(bill)
+    test_session.commit()
+
+
+@pytest.fixture
+def sample_bill(test_session, sample_product, logged_in_user):
+    bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
+                amount=sample_product.price, payment_method="direct")
+    test_session.add(bill)
+    test_session.commit()
+    return bill
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -382,7 +419,7 @@ class TestAdminProduct:
         from bookingapp.admin import ProductView
         view = ProductView(Product, db.session)
         pid = product_with_future_booking.id
-        with _app.test_request_context():
+        with test_app.test_request_context():   # ← dùng test_app thay vì _app
             result = view.delete_model(product_with_future_booking)
         assert result is False
         assert Product.query.get(pid) is not None

@@ -4,37 +4,54 @@ Dự án: Quản lý đặt sân thể thao
 """
 
 import pytest
+import os
 from bookingapp import db
 from bookingapp.index import register_routes
 from bookingapp.models import User, Category, Product, Booking, Bill, Review, TimeSlot, Favorite
 from datetime import datetime, timedelta
 from flask import Flask
 
-def create_app():
-    from bookingapp import app, db
-    from bookingapp.index import register_routes
+# test_base.py — thêm hàm create_app_with_admin và fixture admin_app
 
-    # Chỉ override config, KHÔNG gọi db.init_app lại
+def create_app(include_admin=False):
+    template_dir = os.path.abspath("bookingapp/templates")
+    app = Flask(__name__, template_folder=template_dir)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["TESTING"] = True
     app.config["WTF_CSRF_ENABLED"] = False
     app.secret_key = "test_secret_key"
 
-    register_routes(app)
+    db.init_app(app)
+    register_routes(app=app)
+
+    if include_admin:
+        from bookingapp.admin import init_admin
+        init_admin(app, db)       # ← gọi đúng hàm, đúng app
+
     return app
 
 
-# ─── Fixtures cốt lõi ────────────────────────────────────────────────────────
-
 @pytest.fixture(scope="function")
 def test_app():
-    app = create_app()
+    """App thường — không có Flask-Admin."""
+    app = create_app(include_admin=False)
     with app.app_context():
         db.create_all()
         yield app
         db.session.remove()
         db.drop_all()
 
+
+@pytest.fixture(scope="function")
+def admin_app():
+    """App có Flask-Admin — dùng cho test_admin.py."""
+    app = create_app(include_admin=True)
+    with app.app_context():
+        db.create_all()
+        yield app
+        db.session.remove()
+        db.drop_all()
 
 @pytest.fixture(scope="function")
 def test_client(test_app):

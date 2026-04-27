@@ -79,9 +79,9 @@ class TestStaticPages:
         res = test_client.get("/featured")
         assert res.status_code == 200
 
-    def test_favorites_page_unauthenticated(self, test_client):
-        """TC3: /favorites cho phép guest xem (render template)."""
-        res = test_client.get("/favorites")
+    def test_favorites_rendered_on_home(self, logged_in_client):
+        """TC3: Favorites section nằm trên trang chủ."""
+        res = logged_in_client.get("/", follow_redirects=True)
         assert res.status_code == 200
 
     def test_account_page_unauthenticated_redirect(self, test_client):

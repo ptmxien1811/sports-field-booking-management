@@ -323,18 +323,65 @@ async function submitReview() {
 
 function toggleHeart(el, productId) {
     fetch(`/api/favorite/${productId}`, { method: 'POST' })
-    .then(res => res.status === 401 ? alert("Bạn cần đăng nhập!") : res.json())
+    .then(res => {
+        if (res.status === 401) {
+            alert("Vui lòng đăng nhập để thực hiện tính năng này!");
+            window.location.href = "/login";
+            return null;
+        }
+        return res.json();
+    })
     .then(data => {
-        if (data?.ok) {
-            const icon = el.querySelector('i');
-            if (data.added) {
-                icon.classList.replace('fa-regular', 'fa-solid');
-                icon.classList.add('text-danger');
-            } else {
-                icon.classList.replace('fa-solid', 'fa-regular');
-                icon.classList.remove('text-danger');
-                if (el.closest('#favorites')) el.closest('.venue-card').remove();
+        if (!data || !data.ok) return;
+
+        const icon = el.querySelector('i');
+        const favList  = document.querySelector('#favorites .favorite-list');
+        const emptyMsg = document.querySelector('#favorites .fav-empty');
+
+        if (data.added) {
+            icon.classList.replace('fa-regular', 'fa-solid');
+            icon.classList.add('text-danger');
+
+            if (favList && !favList.querySelector(`[data-fav-id="${productId}"]`)) {
+                const sourceCard = el.closest('.venue-card');
+                if (sourceCard) {
+                    const clone = sourceCard.cloneNode(true);
+                    clone.setAttribute('data-fav-id', productId);
+
+                    const cloneIcon = clone.querySelector('.fav-btn i');
+                    if (cloneIcon) {
+                        cloneIcon.classList.replace('fa-regular', 'fa-solid');
+                        cloneIcon.classList.add('text-danger');
+                    }
+
+                    const cloneFavBtn = clone.querySelector('.fav-btn');
+                    if (cloneFavBtn) {
+                        cloneFavBtn.setAttribute('onclick', `toggleHeart(this, ${productId})`);
+                    }
+
+                    favList.appendChild(clone);
+
+                    if (emptyMsg) emptyMsg.style.display = 'none';
+                }
+            }
+
+        } else {
+            icon.classList.replace('fa-solid', 'fa-regular');
+            icon.classList.remove('text-danger');
+
+            if (favList) {
+                const cardInFav = favList.querySelector(`[data-fav-id="${productId}"]`);
+                if (cardInFav) cardInFav.remove();
+
+                if (favList.children.length === 0 && emptyMsg) {
+                    emptyMsg.style.display = 'block';
+                }
+            }
+
+            if (el.closest('#favorites')) {
+                el.closest('.venue-card').remove();
             }
         }
-    });
+    })
+    .catch(err => console.error("Lỗi yêu thích:", err));
 }

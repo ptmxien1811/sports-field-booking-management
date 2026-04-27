@@ -321,20 +321,82 @@ async function submitReview() {
     document.getElementById('reviewContent').value = ''; toggleReviewForm();
 }
 
+
+
 function toggleHeart(el, productId) {
     fetch(`/api/favorite/${productId}`, { method: 'POST' })
-    .then(res => res.status === 401 ? alert("Bạn cần đăng nhập!") : res.json())
+    .then(res => {
+        if (res.status === 401) {
+            alert("Vui lòng đăng nhập để thực hiện tính năng này!");
+            window.location.href = "/login";
+            return null;
+        }
+        return res.json();
+    })
     .then(data => {
-        if (data?.ok) {
-            const icon = el.querySelector('i');
-            if (data.added) {
+        if (!data || !data.ok) return;
+
+        const allHeartBtns = document.querySelectorAll(`.fav-btn[onclick*="${productId}"]`);
+        const favTab = document.getElementById('favorites');
+        if (!favTab) return;
+
+        let favListContainer = favTab.querySelector('.favorite-list');
+        let emptyMsg = favTab.querySelector('.alert-info');
+
+        if (data.added) {
+            // --- THÊM VÀO YÊU THÍCH ---
+            allHeartBtns.forEach(btn => {
+                const icon = btn.querySelector('i');
                 icon.classList.replace('fa-regular', 'fa-solid');
                 icon.classList.add('text-danger');
-            } else {
+            });
+
+            if (!favListContainer) {
+                favListContainer = document.createElement('div');
+                favListContainer.className = 'favorite-list d-flex flex-wrap gap-3';
+                favTab.appendChild(favListContainer);
+            }
+
+            const alreadyInFav = favListContainer.querySelector(`[data-product-id="${productId}"]`);
+            if (!alreadyInFav) {
+                const sourceCard = document.querySelector(`#venues .venue-card:has(.fav-btn[onclick*="${productId}"])`);
+                if (sourceCard) {
+                    const clone = sourceCard.cloneNode(true);
+                    clone.setAttribute('data-product-id', productId);
+                    const cloneFavBtn = clone.querySelector('.fav-btn');
+                    if (cloneFavBtn) {
+                        cloneFavBtn.onclick = function() { toggleHeart(this, productId); };
+                    }
+                    favListContainer.appendChild(clone);
+                }
+            }
+            if (emptyMsg) emptyMsg.style.display = 'none';
+
+        } else {
+            // --- BỎ YÊU THÍCH ---
+            allHeartBtns.forEach(btn => {
+                const icon = btn.querySelector('i');
                 icon.classList.replace('fa-solid', 'fa-regular');
                 icon.classList.remove('text-danger');
-                if (el.closest('#favorites')) el.closest('.venue-card').remove();
+            });
+
+            const cardInFav = favTab.querySelector(`[data-product-id="${productId}"]`) ||
+                              favTab.querySelector(`.venue-card:has(.fav-btn[onclick*="${productId}"])`);
+            if (cardInFav) cardInFav.remove();
+
+            const updatedContainer = favTab.querySelector('.favorite-list');
+
+            if (!updatedContainer || updatedContainer.children.length === 0) {
+                if (!emptyMsg) {
+                    emptyMsg = document.createElement('div');
+                    emptyMsg.className = 'alert alert-info';
+                    emptyMsg.textContent = 'Bạn chưa có sân nào trong danh sách yêu thích.';
+                    favTab.appendChild(emptyMsg);
+                }
+                emptyMsg.style.display = 'block';
+                if (updatedContainer) updatedContainer.remove();
             }
         }
-    });
+    })
+    .catch(err => console.error("Lỗi đồng bộ:", err));
 }

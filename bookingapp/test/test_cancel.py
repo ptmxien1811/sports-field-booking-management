@@ -177,31 +177,44 @@ def test_cancel_allows_rebooking_within_limit(test_session, logged_in_user, samp
     """
     from bookingapp.dao import create_booking, cancel_booking_by_id
     from bookingapp.models import Booking
+    from bookingapp import db
+    from datetime import datetime, timedelta, time
 
-    sel_date = (datetime.now() + timedelta(days=2)).date()
+    sel_date_obj = (datetime.now() + timedelta(days=2)).date()
+    day_start = datetime.combine(sel_date_obj, time.min)
 
     slots = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00"]
     booked_ids = []
     for s in slots:
-        b, _ = create_booking(logged_in_user.id, sample_product.id, s, sel_date)
+        b, _ = create_booking(logged_in_user.id, sample_product.id, s, sel_date_obj)
         booked_ids.append(b.id)
 
-    count_before = Booking.query.filter_by(user_id=logged_in_user.id, date=sel_date, status="confirmed").count()
+    db.session.commit()
+
+    count_before = test_session.query(Booking).filter(
+        Booking.user_id == logged_in_user.id,
+        Booking.date == day_start,
+        Booking.status == "confirmed"
+    ).count()
     assert count_before == 3
 
-    _, error = create_booking(logged_in_user.id, sample_product.id, "11:00 - 12:00", sel_date)
+    _, error = create_booking(logged_in_user.id, sample_product.id, "11:00 - 12:00", sel_date_obj)
     assert error is not None
 
     cancel_booking_by_id(booked_ids[0], logged_in_user.id)
+    db.session.commit()  # Commit để cập nhật trạng thái hủy xuống DB
 
-    new_booking, new_error = create_booking(logged_in_user.id, sample_product.id, "11:00 - 12:00", sel_date)
+    new_booking, new_error = create_booking(logged_in_user.id, sample_product.id, "11:00 - 12:00", sel_date_obj)
 
     assert new_error is None
     assert new_booking.status == "confirmed"
 
-    final_count = Booking.query.filter_by(user_id=logged_in_user.id, date=sel_date, status="confirmed").count()
+    final_count = test_session.query(Booking).filter(
+        Booking.user_id == logged_in_user.id,
+        Booking.date == day_start,
+        Booking.status == "confirmed"
+    ).count()
     assert final_count == 3
-
 
 def test_cancel_booking_transaction_integrity(test_session, logged_in_user, sample_product):
     """

@@ -191,6 +191,13 @@ div.container
 .venue-card p {
     font-size: 14px;
     margin: 3px 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 1.2em;
+    line-height: 1.2em;
 }
 
 /* Nút đặt lịch */

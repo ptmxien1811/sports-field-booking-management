@@ -1,5 +1,5 @@
 from bookingapp import db
-from bookingapp.models import Booking, User, Product, Category, Favorite, Review, TimeSlot
+from bookingapp.models import Booking, User, Product, Category, Favorite, Review, TimeSlot, Bill
 from sqlalchemy.orm import joinedload
 from datetime import datetime, date as date_type, timedelta
 from sqlalchemy import func
@@ -97,10 +97,39 @@ def create_booking(user_id, product_id, slot_label, date_obj):
 
 
 def cancel_booking_by_id(booking_id, user_id):
-    b = Booking.query.filter_by(id=booking_id, user_id=user_id).first()
-    if not b:
+    booking = Booking.query.get(booking_id)
+
+    if not booking or booking.user_id != user_id:
         return False
-    b.status = "cancelled"
+
+    if booking.status == "cancelled":
+        return False
+
+    now_time = datetime.now()
+
+    if now_time > booking.end_time:
+        return False
+
+    if booking.start_time <= now_time <= booking.end_time:
+        return False
+
+    if now_time < booking.start_time:
+        if booking.start_time - now_time < timedelta(hours=2):
+            return False
+
+    slot = TimeSlot.query.filter_by(
+        product_id=booking.product_id,
+        label=booking.slot_label
+    ).first()
+
+    if slot:
+        slot.active = True
+
+    existing_bill = Bill.query.filter_by(booking_id=booking_id).first()
+    if existing_bill:
+        db.session.delete(existing_bill)
+    # qua hết các chốt chặn trên thì mới hủy
+    booking.status = "cancelled"
     db.session.commit()
     return True
 

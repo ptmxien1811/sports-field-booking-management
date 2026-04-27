@@ -31,8 +31,8 @@
     <div class="venue-card" style="position: relative;">
         <img src="{{ url_for('static', filename='image/' ~ product.image) }}" alt="{{ product.name }}">
         <h3>{{ product.name }}</h3>
-        <p>Địa chỉ: {{ product.category.address }}</p>
-        <p>SĐT: {{ product.category.phone }}</p>
+        <p>Địa chỉ: {{ product.address }}</p>
+        <p>SĐT: {{ product.phone }}</p>
         <p class="product-price">Giá: {{ "{:,.0f}".format(product.price) }}đ</p>
 
         <div class="hidden-amenities" style="display: none;">
@@ -73,8 +73,8 @@
                          alt="{{ b.product.name }}">
 
                     <h3>{{ b.product.name }}</h3>
-                    <p>Địa chỉ: {{ b.product.category.address }}</p>
-                    <p>SĐT: {{ b.product.category.phone }}</p>
+                    <p>Địa chỉ: {{ b.product.address }}</p>
+                    <p>SĐT: {{ b.product.phone }}</p>
                     <p>Giá: {{ "{:,.0f}".format(b.product.price) }}đ</p>
                     <p>Thời gian: {{ b.start_time }} - {{ b.end_time }}</p>
 
@@ -114,8 +114,8 @@
 
                     <h3>{{ f.product.name }}</h3>
 
-                    <p>Địa chỉ: {{ f.product.category.address }}</p>
-                    <p>SĐT: {{ f.product.category.phone }}</p>
+                    <p>Địa chỉ: {{ f.product.address }}</p>
+                    <p>SĐT: {{ f.product.phone }}</p>
                     <p>Giá: {{ "{:,.0f}".format(f.product.price) }}đ</p>
 
                     <a href="{{ url_for('venue_detail', id=f.product.id) }}">

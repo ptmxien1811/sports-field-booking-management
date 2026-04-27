@@ -64,34 +64,53 @@
         {% endif %}
     {% endwith %}
     </div>
-    {% if bookings %}
+    {% if grouped_bookings %}
         <div class="booked-list">
-            {% for b in bookings %}
+            {% for g in grouped_bookings %}
+                {% set first_b = g.bookings[0] %}
+                {% set key = g.group_id if g.group_id else g.booking_ids[0]|string %}
                 <div class="venue-card">
 
-                    <img src="{{ url_for('static', filename='image/' + b.product.image) }}"
-                         alt="{{ b.product.name }}">
+                    <img src="{{ url_for('static', filename='image/' + g.product.image) }}"
+                         alt="{{ g.product.name }}">
 
-                    <h3>{{ b.product.name }}</h3>
-                    <p>Địa chỉ: {{ b.product.address }}</p>
-                    <p>SĐT: {{ b.product.phone }}</p>
-                    <p>Giá: {{ "{:,.0f}".format(b.product.price) }}đ</p>
-                    <p>Thời gian: {{ b.start_time }} - {{ b.end_time }}</p>
+                    <h3>{{ g.product.name }}</h3>
+                    <p>Địa chỉ: {{ g.product.address }}</p>
+                    <p>SĐT: {{ g.product.phone }}</p>
+                    <p>Giá: {{ "{:,.0f}".format(g.product.price) }}đ/khung giờ</p>
+                    {% for b in g.bookings %}
+                        <p>🕐 {{ b.slot_label }} ({{ b.date.strftime('%d/%m/%Y') }})</p>
+                    {% endfor %}
+                    {% if g.bookings|length > 1 %}
+                        <p><strong>Tổng: {{ "{:,.0f}".format(g.product.price * g.bookings|length) }}đ</strong></p>
+                    {% endif %}
 
                     <div class="booking-actions">
-                        {% if b.id in paid_booking_ids %}
-                            <form method="post" action="/api/cancel-booking/{{ b.id }}">
-                                <button class="cancel-btn">HỦY SÂN</button>
-                            </form>
+                        {% if key|string in paid_group_keys %}
+                            {% if g.group_id %}
+                                <form method="post" action="/api/cancel-group/{{ g.group_id }}">
+                                    <button class="cancel-btn">HỦY SÂN</button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="/api/cancel-booking/{{ first_b.id }}">
+                                    <button class="cancel-btn">HỦY SÂN</button>
+                                </form>
+                            {% endif %}
                             <button class="payment-btn disabled-btn" disabled>ĐÃ THANH TOÁN</button>
-                            <a href="/payment/{{ b.id }}" class="view-bill-link">
+                            <a href="/payment/{{ first_b.id }}" class="view-bill-link">
                                 <button class="view-bill-btn">📄 XEM HÓA ĐƠN</button>
                             </a>
                         {% else %}
-                            <form method="post" action="/api/cancel-booking/{{ b.id }}">
-                                <button class="cancel-btn">HỦY SÂN</button>
-                            </form>
-                            <a href="/payment/{{ b.id }}" class="payment-link">
+                            {% if g.group_id %}
+                                <form method="post" action="/api/cancel-group/{{ g.group_id }}">
+                                    <button class="cancel-btn">HỦY SÂN</button>
+                                </form>
+                            {% else %}
+                                <form method="post" action="/api/cancel-booking/{{ first_b.id }}">
+                                    <button class="cancel-btn">HỦY SÂN</button>
+                                </form>
+                            {% endif %}
+                            <a href="/payment/{{ first_b.id }}" class="payment-link">
                                 <button class="payment-btn">THANH TOÁN</button>
                             </a>
                         {% endif %}
@@ -148,7 +167,7 @@
               <div class="mb-4">
                 <h6 class="fw-bold">🏸 Loại sân</h6>
                 <div class="d-flex flex-wrap gap-2">
-                  {% set cats = ["Sân bóng đá", "Sân tennis", "Sân cầu lông"] %}
+                  {% set cats = ["Sân bóng đá", "Sân tennis", "Hồ bơi", "Sân cầu lông", "Sân bóng rổ", "Sân bóng chuyền", "Sân bóng bàn", "Sân pickleball"] %}
                   {% for cat in cats %}
                   <input type="checkbox" class="btn-check filter-category" id="cat-{{ loop.index }}" value="{{ cat }}">
                   <label class="btn btn-outline-primary btn-sm rounded-pill" for="cat-{{ loop.index }}">{{ cat }}</label>

@@ -7,8 +7,7 @@ from bookingapp.dao import (get_bookings_by_user, get_favorites_by_user,
                              get_slots_for_product_date, create_booking,
                              cancel_booking_by_id, toggle_favorite,
                              add_review, get_product_by_id,
-                             has_booked_product, has_reviewed_product,
-                             get_grouped_bookings_by_user, cancel_grouped_booking)
+                             has_booked_product, has_reviewed_product)
 from bookingapp.models import Product, User, Booking, Bill, Favorite, Review
 from bookingapp import admin
 from datetime import datetime, timedelta, date as date_type
@@ -16,7 +15,6 @@ import datetime as dt
 import requests as http_requests
 import os
 from sqlalchemy import func
-import uuid
 
 # ===== CẤU HÌNH GOOGLE OAUTH =====
 GOOGLE_CLIENT_ID     = os.environ.get("GOOGLE_CLIENT_ID",     "YOUR_GOOGLE_CLIENT_ID")
@@ -36,25 +34,24 @@ def register_routes(app):
         products     = Product.query.filter_by(active=True).all()
         user_id      = session.get("user_id")
         username     = session.get("username")
-        grouped_bookings = []
+        bookings     = []
         favorites    = []
         favorite_ids = []
-        paid_group_keys = []
+        paid_booking_ids = []
         if user_id:
-            grouped_bookings = get_grouped_bookings_by_user(user_id)
+            bookings     = get_bookings_by_user(user_id)
             favorites    = get_favorites_by_user(user_id)
             favorite_ids = [f.product_id for f in favorites]
-            # Tìm những nhóm booking đã thanh toán (đã có Bill)
-            for g in grouped_bookings:
-                paid_bills = Bill.query.filter(Bill.booking_id.in_(g["booking_ids"])).all()
-                if paid_bills:
-                    key = g["group_id"] if g["group_id"] else str(g["booking_ids"][0])
-                    paid_group_keys.append(key)
+            # Tìm những booking đã thanh toán (đã có Bill)
+            if bookings:
+                b_ids = [b.id for b in bookings]
+                paid_bills = Bill.query.filter(Bill.booking_id.in_(b_ids)).all()
+                paid_booking_ids = [bill.booking_id for bill in paid_bills]
 
         return render_template("index.html",
                                products=products,
-                               grouped_bookings=grouped_bookings,
-                               paid_group_keys=paid_group_keys,
+                               bookings=bookings,
+                               paid_booking_ids=paid_booking_ids,
                                favorites=favorites,
                                favorite_ids=favorite_ids,
                                username=username)
@@ -362,26 +359,12 @@ def register_routes(app):
         booked_ids = []
         errors     = []
 
-        # Tạo group_id nếu đặt nhiều khung giờ
-        grp_id = str(uuid.uuid4())[:8] if len(slot_labels) > 1 else None
-
         for slot_label in slot_labels:
             b, err = create_booking(session["user_id"], product_id, slot_label, sel_date)
             if err:
                 errors.append(f"{slot_label}: {err}")
             else:
-                if grp_id:
-                    b.group_id = grp_id
                 booked_ids.append(b.id)
-
-        # Nếu đặt nhiều slot nhưng chỉ 1 thành công → xoá group_id
-        if grp_id and len(booked_ids) == 1:
-            booking_obj = db.session.get(Booking, booked_ids[0])
-            if booking_obj:
-                booking_obj.group_id = None
-
-        if booked_ids:
-            db.session.commit()
 
         if not booked_ids:
             return jsonify({"ok": False, "msg": "; ".join(errors)}), 400
@@ -445,48 +428,6 @@ def register_routes(app):
             "has_booked":   booked,
             "reason": "ok" if (booked and not reviewed) else ("already_reviewed" if reviewed else "not_booked")
         })
-
-
-    # ===== CANCEL BOOKING =====
-
-    @app.route("/api/cancel-booking/<int:id>", methods=["POST"])
-    def cancel_booking_final(id):
-        user_id = session.get("user_id")
-
-        # Kiểm tra có Bill (đã thanh toán) trước khi hủy
-        had_bill = Bill.query.filter_by(booking_id=id).first() is not None
-
-        success = cancel_booking_by_id(id, user_id)
-
-        if success:
-            db.session.commit()
-            if had_bill:
-                flash("Đã hoàn tiền và hủy sân thành công!", "success")
-            else:
-                flash("Đã hủy thành công!", "success")
-
-        else:
-            flash("Không thể hủy!", "danger")
-
-        return redirect(url_for("home", _anchor="booked"))
-
-
-    # ===== CANCEL GROUPED BOOKING =====
-    @app.route("/api/cancel-group/<group_id>", methods=["POST"])
-    def cancel_group_booking(group_id):
-        user_id = session.get("user_id")
-        success, had_bill = cancel_grouped_booking(group_id, user_id)
-
-        if success:
-            if had_bill:
-                flash("Đã hoàn tiền và hủy sân thành công!", "success")
-            else:
-                flash("Đã hủy thành công!", "success")
-        else:
-            flash("Không thể hủy! (Sân sắp sử dụng, đang sử dụng hoặc đã sử dụng xong)", "danger")
-
-        return redirect(url_for("home", _anchor="booked"))
-
 
     # ===== ACCOUNT PAGE =====
     @app.route("/account")
@@ -645,24 +586,8 @@ def register_routes(app):
         user = db.session.get(User, user_id)
         product = booking.product
 
-        # Nếu booking thuộc group → lấy tất cả slot + tính tổng tiền
-        group_bookings = []
-        total_amount = product.price
-        if booking.group_id:
-            group_bookings = Booking.query.filter_by(
-                group_id=booking.group_id, status="confirmed"
-            ).order_by(Booking.start_time).all()
-            total_amount = product.price * len(group_bookings)
-            # Kiểm tra bill qua tất cả booking trong nhóm
-            if not is_paid:
-                g_ids = [gb.id for gb in group_bookings]
-                existing_bill = Bill.query.filter(Bill.booking_id.in_(g_ids)).first()
-                is_paid = existing_bill is not None
-
         return render_template("payment.html",
                                booking=booking,
-                               group_bookings=group_bookings,
-                               total_amount=total_amount,
                                user=user,
                                product=product,
                                username=session.get("username"),
@@ -685,30 +610,17 @@ def register_routes(app):
         if not booking or booking.user_id != user_id:
             return jsonify({"ok": False, "msg": "Không tìm thấy đơn đặt sân"}), 404
 
-        # Tính tổng tiền: nếu thuộc group → nhân theo số slot
-        if booking.group_id:
-            group_bookings = Booking.query.filter_by(
-                group_id=booking.group_id, status="confirmed"
-            ).all()
-            # Kiểm tra đã thanh toán chưa (bất kỳ booking nào trong nhóm)
-            g_ids = [gb.id for gb in group_bookings]
-            existing_bill = Bill.query.filter(Bill.booking_id.in_(g_ids)).first()
-            if existing_bill:
-                return jsonify({"ok": False, "msg": f"Đã thanh toán rồi! Mã hóa đơn: #{existing_bill.id}"}), 400
-            total_amount = booking.product.price * len(group_bookings)
-        else:
-            # Đặt lẻ: kiểm tra bình thường
-            existing_bill = Bill.query.filter_by(booking_id=booking_id).first()
-            if existing_bill:
-                return jsonify({"ok": False, "msg": f"Đã thanh toán rồi! Mã hóa đơn: #{existing_bill.id}"}), 400
-            total_amount = booking.product.price
+        # Kiểm tra đã thanh toán chưa
+        existing_bill = Bill.query.filter_by(booking_id=booking_id).first()
+        if existing_bill:
+            return jsonify({"ok": False, "msg": f"Đã thanh toán rồi! Mã hóa đơn: #{existing_bill.id}"}), 400
 
         # Tạo hóa đơn mới
         bill = Bill(
             user_id=user_id,
             product_id=booking.product_id,
             booking_id=booking.id,
-            amount=total_amount,
+            amount=booking.product.price,
             payment_method=payment_method
         )
         db.session.add(bill)
@@ -879,3 +791,4 @@ def register_routes(app):
 if __name__ == "__main__":
     register_routes(app=app)
     app.run(debug=True)
+

@@ -677,11 +677,10 @@ def register_routes(app):
         data = request.json
         booking_id     = data.get("booking_id")
         payment_method = data.get("payment_method", "direct")
-
-        booking = Booking.query.get(booking_id)
-        if not booking or booking.user_id != user_id:
+        db.session.expire_all()
+        booking = db.session.get(Booking, booking_id)
+        if not booking:
             return jsonify({"ok": False, "msg": "Không tìm thấy đơn đặt sân"}), 404
-
         # Tính tổng tiền: nếu thuộc group → nhân theo số slot
         if booking.group_id:
             group_bookings = Booking.query.filter_by(

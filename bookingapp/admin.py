@@ -22,7 +22,7 @@ class MyAdminIndexView(AdminIndexView):
         from bookingapp import db
         from bookingapp.models import User, Category, Product, Bill
 
-        total_revenue = db.session.query(func.sum(Bill.amount)).scalar()
+        total_revenue = db.session.query(func.sum(Bill.amount)).scalar() or 0
         stats = {
             'total_users':      User.query.count(),
             'total_categories': Category.query.count(),

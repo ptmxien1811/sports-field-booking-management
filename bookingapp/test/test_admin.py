@@ -189,15 +189,6 @@ class TestGetAllFavoritesDAO:
 # ─── Fixtures bổ sung ─────────────────────────────────────────────────────────
 
 @pytest.fixture
-def non_admin_client(test_client, logged_in_user):
-    """Client đăng nhập user thường (không phải admin)."""
-    with test_client.session_transaction() as sess:
-        sess["user_id"] = logged_in_user.id
-        sess["username"] = logged_in_user.username
-    return test_client
-
-
-@pytest.fixture
 def product_with_future_booking(test_session, sample_product, logged_in_user):
     """Sân đang có booking tương lai (confirmed)."""
     future = datetime.now() + timedelta(days=3)

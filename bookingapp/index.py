@@ -681,6 +681,8 @@ def register_routes(app):
         booking = db.session.get(Booking, booking_id)
         if not booking:
             return jsonify({"ok": False, "msg": "Không tìm thấy đơn đặt sân"}), 404
+        if booking.user_id != user_id:
+            return jsonify({"ok": False, "msg": "Bạn không có quyền thanh toán đơn này"}), 403
         # Tính tổng tiền: nếu thuộc group → nhân theo số slot
         if booking.group_id:
             group_bookings = Booking.query.filter_by(

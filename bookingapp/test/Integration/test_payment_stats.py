@@ -34,7 +34,7 @@ class TestPaymentToStats:
         assert res.status_code == 200
 
     def test_stats_count_increases_after_payment(
-            self, test_session, logged_in_client, admin_client, confirmed_booking):
+            self, test_session, logged_in_client, confirmed_booking):
         """
         TC2: Sau thanh toán, tổng bill count tăng lên 1.
         Tích hợp: /api/payment → Bill tạo mới → stats count.

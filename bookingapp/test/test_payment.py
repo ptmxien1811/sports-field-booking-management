@@ -363,4 +363,92 @@ class TestPaymentMock:
         assert mock_booking.status == "confirmed"
         assert mock_booking.product.price == 300_000
         assert mock_bill.id == 99
-        assert mock_bill.amount == 300_000
+        assert mock_bill.amount == 300_000
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 6: TEST – Payment page group booking (index.py:649-657)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestPaymentGroupBooking:
+    """TC-PAY-GROUP: Kiểm tra trang thanh toán cho nhóm booking."""
+
+    def _make_group(self, test_session, user, product, group_id, slots):
+        from bookingapp.models import TimeSlot
+        tomorrow = datetime.now() + timedelta(days=1)
+        day_start = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+        bookings = []
+        for i, slot in enumerate(slots):
+            b = Booking(
+                user_id=user.id, product_id=product.id,
+                slot_label=slot, date=day_start,
+                start_time=tomorrow.replace(hour=8+i, minute=0, second=0, microsecond=0),
+                end_time=tomorrow.replace(hour=9+i, minute=0, second=0, microsecond=0),
+                status="confirmed", group_id=group_id,
+            )
+            test_session.add(b)
+            bookings.append(b)
+        test_session.commit()
+        return bookings
+
+    def test_payment_page_group_booking(self, test_session, logged_in_client,
+                                         logged_in_user, sample_product):
+        """TC1: Trang thanh toán hiển thị đúng cho nhóm booking (index.py:649-652)."""
+        bks = self._make_group(test_session, logged_in_user, sample_product,
+                               "pay_grp1", ["08:00 - 09:00", "09:00 - 10:00"])
+        res = logged_in_client.get(f"/payment/{bks[0].id}", follow_redirects=True)
+        assert res.status_code == 200
+
+    def test_payment_page_group_already_paid(self, test_session, logged_in_client,
+                                              logged_in_user, sample_product):
+        """TC2: Nhóm booking đã thanh toán → is_paid=True (index.py:654-657)."""
+        bks = self._make_group(test_session, logged_in_user, sample_product,
+                               "pay_grp2", ["08:00 - 09:00", "09:00 - 10:00"])
+        bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
+                    booking_id=bks[1].id, amount=600_000)
+        test_session.add(bill)
+        test_session.commit()
+        # Truy cập qua booking đầu tiên (không có bill trực tiếp)
+        res = logged_in_client.get(f"/payment/{bks[0].id}", follow_redirects=True)
+        assert res.status_code == 200
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 7: API TEST – Group payment duplicate (index.py:695)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestPaymentGroupDuplicate:
+    """TC-PAY-GROUP-DUP: Thanh toán lại nhóm đã trả → 400."""
+
+    def test_group_payment_duplicate_rejected(self, test_session, logged_in_client,
+                                               logged_in_user, sample_product):
+        """TC1: Nhóm đã thanh toán → trả lại mã hóa đơn cũ (index.py:695)."""
+        tomorrow = datetime.now() + timedelta(days=1)
+        day_start = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
+        bks = []
+        for i, slot in enumerate(["08:00 - 09:00", "09:00 - 10:00"]):
+            b = Booking(
+                user_id=logged_in_user.id, product_id=sample_product.id,
+                slot_label=slot, date=day_start,
+                start_time=tomorrow.replace(hour=8+i, minute=0, second=0, microsecond=0),
+                end_time=tomorrow.replace(hour=9+i, minute=0, second=0, microsecond=0),
+                status="confirmed", group_id="dup_grp",
+            )
+            test_session.add(b)
+            bks.append(b)
+        test_session.commit()
+        # Thanh toán lần 1
+        res1 = logged_in_client.post("/api/payment",
+                                      data=json.dumps({"booking_id": bks[0].id,
+                                                       "payment_method": "direct"}),
+                                      content_type="application/json")
+        assert json.loads(res1.data)["ok"] is True
+        # Thanh toán lần 2 (trùng) → 400
+        res2 = logged_in_client.post("/api/payment",
+                                      data=json.dumps({"booking_id": bks[0].id,
+                                                       "payment_method": "direct"}),
+                                      content_type="application/json")
+        assert res2.status_code == 400
+        data = json.loads(res2.data)
+        assert data["ok"] is False
+        assert "Đã thanh toán" in data["msg"]

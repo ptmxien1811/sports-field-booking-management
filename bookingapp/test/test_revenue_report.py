@@ -378,3 +378,25 @@ class TestStatsIntegration:
          .join(Category, Category.id == Product.category_id) \
          .scalar() or 0
         assert total == cat_total
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 4: API TEST – /stats invalid end_date (index.py:750)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestStatsInvalidEndDate:
+    """TC-STATS-ENDDATE: Kiểm tra xử lý end_date sai format."""
+
+    def test_stats_invalid_end_date_format(self, admin_client):
+        """TC1: end_date sai format → không crash (index.py:750)."""
+        res = admin_client.get(
+            "/stats?end_date=not-a-date", follow_redirects=True
+        )
+        assert res.status_code == 200
+
+    def test_stats_invalid_both_dates(self, admin_client):
+        """TC2: Cả start và end đều sai format → xử lý graceful."""
+        res = admin_client.get(
+            "/stats?start_date=abc&end_date=xyz", follow_redirects=True
+        )
+        assert res.status_code == 200

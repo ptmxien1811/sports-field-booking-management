@@ -465,3 +465,79 @@ class TestMyBookingsAPI:
         res = logged_in_client.get("/api/my-bookings-detail")
         data = res.get_json()
         assert data["items"] == []
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 6: UNIT TEST – dao.get_bookings_by_user (dao.py:16)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestGetBookingsByUserDAO:
+    """TC-BOOK-GETDAO: Kiểm tra dao.get_bookings_by_user."""
+
+    def test_get_bookings_returns_confirmed(self, test_session, logged_in_user, confirmed_booking):
+        from bookingapp.dao import get_bookings_by_user
+        bookings = get_bookings_by_user(logged_in_user.id)
+        assert len(bookings) == 1
+        assert bookings[0].status == "confirmed"
+
+    def test_get_bookings_excludes_cancelled(self, test_session, logged_in_user, confirmed_booking):
+        from bookingapp.dao import get_bookings_by_user
+        confirmed_booking.status = "cancelled"
+        test_session.commit()
+        bookings = get_bookings_by_user(logged_in_user.id)
+        assert len(bookings) == 0
+
+    def test_get_bookings_empty_for_new_user(self, test_session, logged_in_user):
+        from bookingapp.dao import get_bookings_by_user
+        bookings = get_bookings_by_user(logged_in_user.id)
+        assert bookings == []
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 7: API TEST – group_id edge cases (index.py:380-382, 392)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestBookGroupEdgeCases:
+    """TC-BOOK-GROUP: Kiểm tra group_id và partial failure."""
+
+    def test_book_multi_slots_one_fails_clears_group_id(self, logged_in_client, sample_product):
+        """TC1: Đặt 2 slot nhưng 1 slot trong quá khứ → chỉ 1 thành công, group_id=None."""
+        tomorrow = str((datetime.now() + timedelta(days=1)).date())
+        yesterday = str((datetime.now() - timedelta(days=1)).date())
+        # Đặt lần đầu slot hợp lệ rồi đặt lại cùng slot → trùng
+        logged_in_client.post("/api/book", json={
+            "product_id": sample_product.id,
+            "slot": "08:00 - 09:00",
+            "date": tomorrow,
+        })
+        # Đặt 2 slot: 1 trùng (08:00) + 1 mới (10:00)
+        res = logged_in_client.post("/api/book", json={
+            "product_id": sample_product.id,
+            "slots": ["08:00 - 09:00", "10:00 - 11:00"],
+            "date": tomorrow,
+        })
+        data = res.get_json()
+        assert data["ok"] is True
+        assert len(data["booking_ids"]) == 1
+        # Booking thành công phải không có group_id (vì chỉ 1 cái thành công)
+        b = Booking.query.get(data["booking_ids"][0])
+        assert b.group_id is None
+
+    def test_book_multi_slots_partial_failure_message(self, logged_in_client, sample_product):
+        """TC2: Đặt 2 slot, 1 thất bại → msg chứa 'thất bại' (index.py:392)."""
+        tomorrow = str((datetime.now() + timedelta(days=1)).date())
+        # Đặt 1 slot trước
+        logged_in_client.post("/api/book", json={
+            "product_id": sample_product.id,
+            "slot": "08:00 - 09:00",
+            "date": tomorrow,
+        })
+        # Đặt 2 slot: 1 trùng + 1 mới
+        res = logged_in_client.post("/api/book", json={
+            "product_id": sample_product.id,
+            "slots": ["08:00 - 09:00", "10:00 - 11:00"],
+            "date": tomorrow,
+        })
+        data = res.get_json()
+        assert data["ok"] is True
+        assert "thất bại" in data["msg"]

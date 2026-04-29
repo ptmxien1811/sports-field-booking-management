@@ -310,3 +310,68 @@ class TestReviewAPI:
         assert data["ok"] is True
         assert len(data["stars"]) == 5
         assert data["stars"] == "★★★☆☆"
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 5: UNIT TEST – Review.date_str edge cases (models.py:182, 191)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestReviewDateStrEdge:
+    """TC-REVIEW-DATESTR: Kiểm tra date_str khi created_at=None và months ago."""
+
+    def test_date_str_none_created_at(self, test_session, sample_product, logged_in_user):
+        """TC1: created_at = None → 'Hôm nay' (models.py:182)."""
+        r = Review(product_id=sample_product.id, user_id=logged_in_user.id,
+                   rating=4, content="No date", created_at=None)
+        test_session.add(r)
+        test_session.commit()
+        assert r.date_str == "Hôm nay"
+
+    def test_date_str_months_ago(self, test_session, sample_product, logged_in_user):
+        """TC2: Review > 30 ngày trước → 'N tháng trước' (models.py:191)."""
+        past = datetime.now() - timedelta(days=60)
+        r = Review(product_id=sample_product.id, user_id=logged_in_user.id,
+                   rating=3, content="Old review", created_at=past)
+        test_session.add(r)
+        test_session.commit()
+        assert "tháng trước" in r.date_str
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 6: UNIT TEST – dao.get_reviews_by_product (dao.py:196)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestGetReviewsByProduct:
+    """TC-REVIEW-GETDAO: Kiểm tra dao.get_reviews_by_product."""
+
+    def test_get_reviews_returns_reviews(self, test_session, sample_product, logged_in_user):
+        from bookingapp.dao import get_reviews_by_product
+        r = Review(product_id=sample_product.id, user_id=logged_in_user.id,
+                   rating=5, content="Great!")
+        test_session.add(r)
+        test_session.commit()
+        reviews = get_reviews_by_product(sample_product.id)
+        assert len(reviews) == 1
+        assert reviews[0].content == "Great!"
+        assert reviews[0].user is not None
+
+    def test_get_reviews_empty(self, test_session, sample_product):
+        from bookingapp.dao import get_reviews_by_product
+        reviews = get_reviews_by_product(sample_product.id)
+        assert reviews == []
+
+    def test_get_reviews_ordered_desc(self, test_session, sample_product, logged_in_user):
+        from bookingapp.dao import get_reviews_by_product
+        r1 = Review(product_id=sample_product.id, user_id=logged_in_user.id,
+                    rating=3, content="First", created_at=datetime.now() - timedelta(days=2))
+        u2 = User(username="reviewer2", auth_type="local")
+        u2.set_password("Test@1234")
+        test_session.add(u2)
+        test_session.commit()
+        r2 = Review(product_id=sample_product.id, user_id=u2.id,
+                    rating=5, content="Second", created_at=datetime.now())
+        test_session.add_all([r1, r2])
+        test_session.commit()
+        reviews = get_reviews_by_product(sample_product.id)
+        assert len(reviews) == 2
+        assert reviews[0].content == "Second"

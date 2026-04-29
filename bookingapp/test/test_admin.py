@@ -578,3 +578,24 @@ class TestAdminDashboardStats:
         """TC3: /stats không có filter → trả về tất cả."""
         res = admin_client.get("/stats", follow_redirects=True)
         assert res.status_code == 200
+
+
+# ═══════════════════════════════════════════════════════════════════
+# SECTION 9: TEST – ProductView.delete_model() exception (admin.py:143-146)
+# ═══════════════════════════════════════════════════════════════════
+
+class TestDeleteModelException:
+    """TC-ADMIN-DEL-EX: Kiểm tra nhánh except trong delete_model."""
+
+    def test_delete_model_exception_returns_false(self, test_session, test_app,
+                                                    sample_product, mocker):
+        """TC1: session.delete ném exception → flash lỗi, rollback, return False."""
+        from bookingapp.admin import ProductView
+        view = ProductView(Product, db.session)
+        pid = sample_product.id
+        mocker.patch.object(view.session, "delete",
+                            side_effect=Exception("DB error simulated"))
+        with test_app.test_request_context():
+            result = view.delete_model(sample_product)
+        assert result is False
+        assert Product.query.get(pid) is not None

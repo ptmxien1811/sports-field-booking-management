@@ -331,6 +331,13 @@ function toggleHeart(el, productId) {
             window.location.href = "/login";
             return null;
         }
+        if (res.status === 404) {
+            console.warn("Sân không tồn tại:", productId);
+            return null;
+        }
+        if (!res.ok) {
+            return res.json().then(d => { console.error(d.msg); return null; });
+        }
         return res.json();
     })
     .then(data => {

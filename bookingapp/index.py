@@ -402,9 +402,13 @@ def register_routes(app):
         user_id = session.get("user_id")
         if not user_id:
             return jsonify({"ok": False, "msg": "Chưa đăng nhập"}), 401
+
+        product = db.session.get(Product, product_id)
+        if not product:
+            return jsonify({"ok": False, "msg": "Sân không tồn tại"}), 404
+
         added = toggle_favorite(user_id, product_id)
         return jsonify({"ok": True, "added": added})
-
 
     # ===== API: GỬI ĐÁNH GIÁ =====
     @app.route("/api/review/<int:product_id>", methods=["POST"])

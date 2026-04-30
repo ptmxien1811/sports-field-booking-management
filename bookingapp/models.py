@@ -92,6 +92,9 @@ class Amenity(BaseModel):
     label      = Column(String(100))
     product    = relationship("Product", back_populates="amenities")
 
+    def __str__(self):
+        return f"{self.icon} {self.label}" if self.icon else self.label
+
 
 class TimeSlot(BaseModel):
     __tablename__ = 'time_slot'

@@ -8,6 +8,7 @@ from flask_admin.model import InlineFormAdmin
 from wtforms import SelectField
 from sqlalchemy import func
 from datetime import datetime
+from bookingapp.models import Amenity
 import os
 
 
@@ -88,6 +89,35 @@ class TimeSlotInlineModel(InlineFormAdmin):
             model.period = "evening"
 
 
+AMENITY_CHOICES = [
+    ("Gửi xe miễn phí", "🚗 Gửi xe miễn phí"),
+    ("Điều hòa",        "❄️ Điều hòa"),
+    ("Phòng tắm",       "🚿 Phòng tắm"),
+    ("Wifi",            "📶 Wifi"),
+    ("Căng tin",        "☕ Căng tin"),
+    ("Cho thuê vợt",    "🏸 Cho thuê vợt"),
+    ("Đèn LED",         "💡 Đèn LED"),
+    ("Mái che",         "🌂 Mái che"),
+    ("Camera an ninh",  "📹 Camera an ninh"),
+    ("Khán đài",        "🏟 Khán đài"),
+    ("Phòng thay đồ",   "🚿 Phòng thay đồ"),
+    ("Nước uống",       "🥤 Nước uống"),
+    ("HLV hỗ trợ",      "👨‍🏫 HLV hỗ trợ"),
+]
+
+AMENITY_ICON_MAP = {label: icon for label, icon in [(c[0], c[1].split(" ")[0]) for c in AMENITY_CHOICES]}
+
+
+class AmenityInlineModel(InlineFormAdmin):
+    form_extra_fields = {
+        'label': SelectField('Tiện ích', choices=AMENITY_CHOICES)
+    }
+    form_excluded_columns = ('icon',)
+
+    def on_model_change(self, form, model, is_created):
+        model.icon = AMENITY_ICON_MAP.get(model.label, "✨")
+
+
 class ProductView(SecureModelView):
     can_view_details = True
     can_export = True
@@ -104,12 +134,12 @@ class ProductView(SecureModelView):
         'category':   'Loại sân',
     }
     column_sortable_list = ['id', 'name', 'price']
-    form_excluded_columns = ['bookings', 'favorites', 'amenities', 'reviews']
+    form_excluded_columns = ['bookings', 'favorites', 'reviews']
     form_extra_fields = {
         'image': ImageUploadField(
             'Ảnh',
             base_path=os.path.join(os.path.dirname(__file__), 'static/images'),
-            relative_path='uploads/',
+            relative_path='',
             namegen=lambda obj, file_data: file_data.filename,
         )
     }
@@ -137,6 +167,9 @@ class ProductView(SecureModelView):
             result = self.on_model_delete(model)
             if result:
                 return False
+            # Xóa các Bill liên quan để tránh lỗi FK constraint
+            from bookingapp.models import Bill
+            Bill.query.filter_by(product_id=model.id).delete()
             self.session.delete(model)
             self.session.commit()
             return True

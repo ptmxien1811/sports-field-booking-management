@@ -60,10 +60,10 @@ def _do_login(driver, username=TEST_USERNAME, password=TEST_PASSWORD):
     login = LoginPage(driver=driver)
     login.open_page()
     login.login(username, password)
-    time.sleep(1)
+    time.sleep(3)
     if '/admin' in driver.current_url:
         driver.get(BasePage.BASE_URL + '/')
-        time.sleep(1)
+        time.sleep(3)
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -76,7 +76,7 @@ def test_login_success(driver):
     login.open_page()
     login.login(TEST_USERNAME, TEST_PASSWORD)
 
-    time.sleep(1)
+    time.sleep(3)
 
     assert driver.current_url.rstrip('/') in [
         BasePage.BASE_URL,
@@ -95,7 +95,7 @@ def test_login_wrong_password(driver):
     login.open_page()
     login.login(TEST_USERNAME, 'SaiMatKhau@999')
 
-    time.sleep(1)
+    time.sleep(3)
 
     assert '/login' in driver.current_url
     try:
@@ -112,7 +112,7 @@ def test_login_redirect_after_login(driver):
     login.open_page(f'{BasePage.BASE_URL}/login?next=/account')
     login.login(TEST_USERNAME, TEST_PASSWORD)
 
-    time.sleep(1)
+    time.sleep(3)
 
     assert '/account' in driver.current_url or '/admin' in driver.current_url
 
@@ -122,16 +122,16 @@ def test_logout(driver):
     login = LoginPage(driver=driver)
     login.open_page()
     login.login(TEST_USERNAME, TEST_PASSWORD)
-    time.sleep(1)
+    time.sleep(3)
 
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(3)
 
     btns = driver.find_elements(*home.LOGOUT_BTN)
     if btns:
         home.logout()
-        time.sleep(1)
+        time.sleep(3)
 
     login_links = driver.find_elements(*home.LOGIN_LINK)
     assert len(login_links) > 0
@@ -145,7 +145,7 @@ def test_homepage_loads_venues(driver):
     """Trang chủ hiển thị danh sách sân (venue cards)."""
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(3)
 
     cards = home.get_venue_cards()
     assert len(cards) > 0, 'Phải có ít nhất 1 sân trong danh sách'
@@ -155,11 +155,11 @@ def test_search_venue_found(driver):
     """Tìm kiếm từ khoá có trong tên sân → chỉ hiển thị kết quả khớp."""
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(2)
 
     keyword = 'Sân'
     home.search(keyword)
-    time.sleep(1)
+    time.sleep(3)
 
     visible_names = [
         e.text for e in driver.find_elements(*home.VENUE_NAMES)
@@ -173,10 +173,10 @@ def test_search_venue_not_found(driver):
     """Tìm kiếm từ khoá không tồn tại → hiện alert 'Không tìm thấy'."""
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(2)
 
     home.search('XYZ_KHONG_TON_TAI_12345')
-    time.sleep(1)
+    time.sleep(3)
 
     try:
         alert = driver.switch_to.alert
@@ -191,10 +191,10 @@ def test_tab_switch_booked(driver):
     """Bấm tab 'Sân đã đặt' → section #booked hiển thị."""
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(2)
 
     home.click_tab_booked()
-    time.sleep(1)
+    time.sleep(3)
 
     booked_section = driver.find_element(By.ID, 'booked')
     assert booked_section.is_displayed()
@@ -204,10 +204,10 @@ def test_tab_switch_favorites(driver):
     """Bấm tab 'Yêu thích' → section #favorites hiển thị."""
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(2)
 
     home.click_tab_favorites()
-    time.sleep(1)
+    time.sleep(3)
 
     fav_section = driver.find_element(By.ID, 'favorites')
     assert fav_section.is_displayed()
@@ -221,7 +221,7 @@ def test_venue_detail_title_and_price(driver):
     """Trang chi tiết sân hiển thị tên sân và giá."""
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(1)
+    time.sleep(3)
 
     title = venue.get_text(*venue.VENUE_TITLE)
     price = venue.get_text(*venue.VENUE_PRICE)
@@ -234,7 +234,7 @@ def test_venue_detail_avail_text_loads(driver):
     """Sau khi load trang, availText không còn là 'Đang tải...'."""
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     avail = venue.get_text(*venue.AVAIL_TEXT)
     assert avail != 'Đang tải...', f'Slot chưa tải xong: {avail}'
@@ -245,7 +245,7 @@ def test_venue_detail_calendar_renders(driver):
     """Calendar hiển thị label tháng/năm."""
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(1)
+    time.sleep(3)
 
     month_label = venue.get_text(*venue.MONTH_LABEL)
     assert 'Tháng' in month_label, f'Label tháng sai: {month_label}'
@@ -255,16 +255,16 @@ def test_venue_detail_next_prev_month(driver):
     """Bấm nút tháng sau / tháng trước → month label thay đổi."""
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(1)
+    time.sleep(3)
 
     before = venue.get_text(*venue.MONTH_LABEL)
     venue.go_next_month()
-    time.sleep(0.5)
+    time.sleep(2)
     after_next = venue.get_text(*venue.MONTH_LABEL)
     assert before != after_next
 
     venue.go_prev_month()
-    time.sleep(0.5)
+    time.sleep(2)
     after_prev = venue.get_text(*venue.MONTH_LABEL)
     assert after_prev == before
 
@@ -277,7 +277,7 @@ def test_venue_book_without_login_shows_lock(driver):
     # Đảm bảo đang logout (browser mới nên chưa login)
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(1)
+    time.sleep(3)
 
     try:
         locked = driver.find_element(*venue.LOCKED_BTN)
@@ -300,14 +300,14 @@ def test_select_slot_shows_summary(driver):
 
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     slots = venue.get_available_slots()
     if not slots:
         pytest.skip('Không có slot trống để test')
 
     venue.select_slot(0)
-    time.sleep(0.5)
+    time.sleep(2)
 
     assert venue.is_summary_visible(), 'Booking summary phải hiện sau khi chọn slot'
     total_text = venue.get_total_price_text()
@@ -320,14 +320,14 @@ def test_select_multiple_slots_summary(driver):
 
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     slots = venue.get_available_slots()
     if len(slots) < 2:
         pytest.skip('Cần ít nhất 2 slot trống để test multi-select')
 
     venue.select_multiple_slots(2)
-    time.sleep(0.5)
+    time.sleep(2)
 
     total_text = venue.get_total_price_text()
     assert '2 giờ' in total_text, f'Phải ghi "2 giờ" trong tổng: {total_text}'
@@ -341,16 +341,16 @@ def test_book_slot_success(driver):
 
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     slots = venue.get_available_slots()
     if not slots:
         pytest.skip('Không có slot trống để đặt')
 
     venue.select_slot(0)
-    time.sleep(0.5)
-    venue.click_book_btn()
     time.sleep(2)
+    venue.click_book_btn()
+    time.sleep(4)
 
     msg = venue.get_book_msg()
     assert '✅' in msg or 'thành công' in msg.lower(), f'Thông báo đặt sân sai: {msg}'
@@ -364,10 +364,10 @@ def test_book_slot_without_selecting(driver):
 
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     venue.click_book_btn()
-    time.sleep(8)
+    time.sleep(5)
 
     msg = venue.get_book_msg()
     assert msg != '', 'Phải có thông báo lỗi khi chưa chọn slot'
@@ -387,16 +387,16 @@ def test_cancel_booking(driver):
 
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     slots = venue.get_available_slots()
     if not slots:
         pytest.skip('Không có slot trống để đặt trước khi test hủy')
 
     venue.select_slot(0)
-    time.sleep(0.5)
-    venue.click_book_btn()
     time.sleep(2)
+    venue.click_book_btn()
+    time.sleep(4)
 
     msg = venue.get_book_msg()
     if '✅' not in msg and 'thành công' not in msg.lower():
@@ -404,10 +404,10 @@ def test_cancel_booking(driver):
 
     cancel = CancelPage(driver=driver)
     cancel.open_home()
-    time.sleep(1)
+    time.sleep(3)
 
     count_before = cancel.get_booked_count()
-    time.sleep(0.5)
+    time.sleep(2)
 
     cancel_btns = driver.find_elements(*cancel.SINGLE_CANCEL)
     if not cancel_btns:
@@ -417,7 +417,7 @@ def test_cancel_booking(driver):
         pytest.skip('Không tìm thấy nút hủy sân')
 
     cancel_btns[0].click()
-    time.sleep(2)
+    time.sleep(4)
 
     try:
         flash = cancel.get_flash_success()
@@ -440,16 +440,16 @@ def test_payment_page_accessible(driver):
 
     venue = VenuePage(driver=driver)
     venue.open_page(VENUE_ID)
-    time.sleep(2)
+    time.sleep(3)
 
     slots = venue.get_available_slots()
     if not slots:
         pytest.skip('Không có slot trống')
 
     venue.select_slot(0)
-    time.sleep(0.5)
-    venue.click_book_btn()
     time.sleep(2)
+    venue.click_book_btn()
+    time.sleep(4)
 
     msg = venue.get_book_msg()
     if 'thành công' not in msg.lower() and '✅' not in msg:
@@ -457,16 +457,16 @@ def test_payment_page_accessible(driver):
 
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(3)
     home.click_tab_booked()
-    time.sleep(1)
+    time.sleep(2)
 
     pay_links = driver.find_elements(By.CSS_SELECTOR, '#booked .payment-link')
     if not pay_links:
         pytest.skip('Không tìm thấy nút Thanh toán')
 
     pay_links[0].click()
-    time.sleep(1)
+    time.sleep(3)
 
     assert '/payment/' in driver.current_url, 'Phải điều hướng đến /payment/<id>'
 
@@ -479,7 +479,7 @@ def test_payment_direct(driver):
 
     booking_page = BookingPage(driver=driver)
     booking_page.open_page(1)
-    time.sleep(1)
+    time.sleep(3)
 
     if '/payment/' not in driver.current_url:
         pytest.skip('Không có booking id=1 thuộc user này')
@@ -500,14 +500,14 @@ def test_toggle_favorite_requires_login(driver):
     """
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(2)
 
     fav_btns = driver.find_elements(*home.FIRST_FAV_BTN)
     if not fav_btns:
         pytest.skip('Không tìm thấy nút yêu thích')
 
     fav_btns[0].click()
-    time.sleep(1)
+    time.sleep(3)
 
     # Trường hợp 1: app hiện alert thông báo chưa đăng nhập
     try:
@@ -522,7 +522,7 @@ def test_toggle_favorite_requires_login(driver):
         pass
 
     # Trường hợp 2: app redirect về /login
-    time.sleep(1)
+    time.sleep(2)
     assert '/login' in driver.current_url, \
         'Chưa login bấm yêu thích phải về /login hoặc hiện alert'
 def test_toggle_favorite_when_logged_in(driver):
@@ -533,11 +533,11 @@ def test_toggle_favorite_when_logged_in(driver):
 
     home = HomePage(driver=driver)
     home.open_page()
-    time.sleep(1)
+    time.sleep(2)
 
     fav_btn = driver.find_element(*home.FIRST_FAV_BTN)
     fav_btn.click()
-    time.sleep(1.5)
+    time.sleep(3)
 
     assert driver.current_url.rstrip('/') in [
         BasePage.BASE_URL,

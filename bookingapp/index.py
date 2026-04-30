@@ -313,17 +313,19 @@ def register_routes(app):
             sel_date = date_type.today()
 
         user_id       = session.get("user_id")
+        # SAU (ĐÚNG) ✅
         bookings_today = 0
         if user_id:
             day_start = datetime.combine(sel_date, datetime.min.time())
-            day_end   = day_start + timedelta(days=1)
-            bookings_today = Booking.query.filter(
+            day_end = day_start + timedelta(days=1)
+            # Đếm số SÂN KHÁC NHAU đã đặt trong ngày
+            booked_product_ids = db.session.query(Booking.product_id).filter(
                 Booking.user_id == user_id,
-                Booking.date    >= day_start,
-                Booking.date    <  day_end,
-                Booking.status  == "confirmed"
-            ).count()
-
+                Booking.date >= day_start,
+                Booking.date < day_end,
+                Booking.status == "confirmed"
+            ).distinct().all()
+            bookings_today = len(booked_product_ids)
         slots_data, available = get_slots_for_product_date(product_id, sel_date)
         return jsonify({
             "slots":          slots_data,

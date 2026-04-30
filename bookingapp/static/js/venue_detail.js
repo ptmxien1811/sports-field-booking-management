@@ -115,10 +115,11 @@ function updateDailyLimitInfo(count, max) {
     if (!window.IS_LOGGED_IN) { el.style.display = "none"; return; }
     if (count >= max) {
         el.style.display = "block";
-        el.textContent   = `⚠️ Bạn đã đặt ${count}/${max} sân trong ngày này (đã đạt giới hạn).`;
+        el.textContent = `⚠️ Bạn đã đặt ${count}/${max} sân khác nhau trong ngày này (đã đạt giới hạn).`;
     } else if (count > 0) {
         el.style.display = "block";
-        el.textContent   = `ℹ️ Bạn đã đặt ${count}/${max} sân ngày này.`;
+        el.textContent = `ℹ️ Bạn đã đặt ${count}/${max} sân khác nhau ngày này. Mỗi sân vẫn đặt được nhiều giờ.`;
+
     } else {
         el.style.display = "none";
     }
@@ -182,12 +183,7 @@ function toggleSlot(el, label) {
         // Bỏ chọn
         selectedSlots.delete(label);
         el.classList.remove("selected");
-    } else {
-        // Kiểm tra giới hạn 3 sân/ngày (tổng đã đặt + đang chọn)
-        if ((bookingsTodayCount + selectedSlots.size) >= 3) {
-            showBookMsg("⚠️ Bạn chỉ còn có thể đặt thêm " + (3 - bookingsTodayCount) + " sân trong ngày này.", "error");
-            return;
-        }
+    }else {
         // Thêm vào
         selectedSlots.add(label);
         el.classList.add("selected");
@@ -209,7 +205,7 @@ function updateBookingSummary() {
         summary.style.display = "none";
         return;
     }
-
+toggleSlot
     summary.style.display = "block";
 
     // Render tags

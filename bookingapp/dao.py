@@ -62,17 +62,22 @@ def create_booking(user_id, product_id, slot_label, date_obj):
         return None, "Khung giờ đặt phải tối thiểu 1 giờ."
 
     # ── Ràng buộc 4: Tối đa 3 sân/ngày ────────────────────────────────────
+    # SAU (ĐÚNG)
     day_start = datetime.combine(date_obj, datetime.min.time())
-    day_end   = day_start + timedelta(days=1)
-    bookings_today = Booking.query.filter(
-        Booking.user_id    == user_id,
-        Booking.date       >= day_start,
-        Booking.date       <  day_end,
-        Booking.status     == "confirmed"
-    ).count()
-    if bookings_today >= 3:
-        return None, "Bạn đã đặt tối đa 3 sân trong ngày này."
+    day_end = day_start + timedelta(days=1)
 
+    # Đếm số SÂN KHÁC NHAU đã đặt trong ngày
+    booked_product_ids = db.session.query(Booking.product_id).filter(
+        Booking.user_id == user_id,
+        Booking.date >= day_start,
+        Booking.date < day_end,
+        Booking.status == "confirmed"
+    ).distinct().all()
+    booked_product_ids = [r[0] for r in booked_product_ids]
+
+    # Chỉ từ chối nếu sân này CHƯA được đặt hôm nay VÀ đã đủ 3 sân khác nhau
+    if product_id not in booked_product_ids and len(booked_product_ids) >= 3:
+        return None, "Bạn đã đặt tối đa 3 sân khác nhau trong ngày này."
     # ── Ràng buộc 5: Trùng khung giờ (cùng sân) ───────────────────────────
     conflict = Booking.query.filter(
         Booking.product_id == product_id,

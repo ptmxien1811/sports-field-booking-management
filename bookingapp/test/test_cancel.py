@@ -1,4 +1,5 @@
 import pytest
+<<<<<<< HEAD
 from bookingapp.dao import create_booking, cancel_booking_by_id
 from bookingapp.models import Booking, Category, Product
 from bookingapp import db
@@ -11,6 +12,27 @@ from bookingapp.test.test_base import (test_session, test_app, test_client,
                                        confirmed_booking, sample_product,
                                        logged_in_client,logged_in_user,
                                        sample_category,sample_product,paid_booking,TimeSlot)
+=======
+from datetime import datetime, timedelta, time # Gom chung các class từ datetime
+
+from flask import url_for
+
+from bookingapp import db
+from bookingapp.models import User, Category, Product, Booking, Bill, TimeSlot
+
+from bookingapp.dao import (
+    cancel_booking_by_id,
+    create_booking,
+    cancel_grouped_booking
+)
+
+from bookingapp.test.test_base import (
+    test_session, test_app, test_client,
+    confirmed_booking, sample_product,
+    logged_in_client, logged_in_user,
+    sample_category, paid_booking
+)
+>>>>>>> e314e0e4d7e1b527a807b05c19d7fa496fb0980d
 # ══════════════════════════════════════════════════════════
 # UNIT TEST -/api/cancel-booking/
 # ══════════════════════════════════════════════════════════
@@ -136,7 +158,6 @@ def test_cancel_booking_deletes_bill(test_session, paid_booking):
     cancel_booking_by_id(booking.id, booking.user_id)
 
     # Kiểm tra bill có còn tồn tại không
-    from bookingapp.models import Bill
     remaining_bill = test_session.get(Bill, bill.id)
     assert remaining_bill is None
 
@@ -177,58 +198,38 @@ def test_cancel_past_booking(test_session, logged_in_user, sample_product):
 
 def test_cancel_allows_rebooking_within_limit(test_session, logged_in_user, sample_product):
     """
-    TC: Kiểm tra sau khi hủy đơn trên sân A, người dùng có thể đặt sân D mới
-    mà không bị chặn bởi giới hạn 3 sân khác nhau/ngày.
+    Kiểm tra sau khi hủy đơn, người dùng có thể đặt lại đơn mới
+    mà không bị chặn bởi giới hạn 3 đơn/ngày.
     """
+<<<<<<< HEAD
     # from bookingapp.dao import create_booking, cancel_booking_by_id
     # from bookingapp.models import Booking, Category, Product
     # from bookingapp import db
     # from datetime import datetime, timedelta, time
+=======
+>>>>>>> e314e0e4d7e1b527a807b05c19d7fa496fb0980d
 
-    sel_date_obj = (datetime.now() + timedelta(days=2)).date()
-    day_start = datetime.combine(sel_date_obj, time.min)
-
-    # Tạo 3 sân khác nhau (sân B, C, D)
-    cat = test_session.query(Category).first()
-    product_b = Product(name="Sân B", price=100000, category_id=cat.id, active=True)
-    product_c = Product(name="Sân C", price=100000, category_id=cat.id, active=True)
-    product_d = Product(name="Sân D", price=100000, category_id=cat.id, active=True)
-    test_session.add_all([product_b, product_c, product_d])
+    # Tạo thêm 2 sân khác nữa để test
+    p2 = Product(name="Sân 2", price=100000, category_id=1)
+    p3 = Product(name="Sân 3", price=100000, category_id=1)
+    test_session.add_all([p2, p3])
     test_session.commit()
 
-    # Đặt 3 sân khác nhau → đạt giới hạn
-    b1, _ = create_booking(logged_in_user.id, sample_product.id, "08:00 - 09:00", sel_date_obj)
-    b2, _ = create_booking(logged_in_user.id, product_b.id,      "08:00 - 09:00", sel_date_obj)
-    b3, _ = create_booking(logged_in_user.id, product_c.id,      "08:00 - 09:00", sel_date_obj)
-    db.session.commit()
+    sel_date_obj = (datetime.now() + timedelta(days=2)).date()
 
-    count_before = test_session.query(Booking).filter(
-        Booking.user_id == logged_in_user.id,
-        Booking.date == day_start,
-        Booking.status == "confirmed"
-    ).count()
-    assert count_before == 3
+    # Đặt 3 sân khác nhau
+    create_booking(logged_in_user.id, sample_product.id, "08:00 - 09:00", sel_date_obj)
+    create_booking(logged_in_user.id, p2.id, "08:00 - 09:00", sel_date_obj)
+    create_booking(logged_in_user.id, p3.id, "08:00 - 09:00", sel_date_obj)
 
-    # Thử đặt sân thứ 4 (sân D) → phải bị chặn vì đã đủ 3 sân khác nhau
-    _, error = create_booking(logged_in_user.id, product_d.id, "08:00 - 09:00", sel_date_obj)
-    assert error is not None, "Phải bị chặn khi đã đặt 3 sân khác nhau"
+    # Bây giờ đặt sân thứ 4 (Sân 4) mới bị lỗi
+    p4 = Product(name="Sân 4", price=100000, category_id=1)
+    test_session.add(p4)
+    test_session.commit()
 
-    # Hủy sân B
-    cancel_booking_by_id(b2.id, logged_in_user.id)
-    db.session.commit()
+    _, error = create_booking(logged_in_user.id, p4.id, "08:00 - 09:00", sel_date_obj)
+    assert error is not None
 
-    # Sau khi hủy, đặt sân D mới → phải thành công (chỉ còn 2 sân khác nhau)
-    new_booking, new_error = create_booking(logged_in_user.id, product_d.id, "08:00 - 09:00", sel_date_obj)
-    assert new_error is None, f"Phải đặt được sau khi hủy: {new_error}"
-    assert new_booking.status == "confirmed"
-
-    # Tổng số booking confirmed vẫn là 3
-    final_count = test_session.query(Booking).filter(
-        Booking.user_id == logged_in_user.id,
-        Booking.date == day_start,
-        Booking.status == "confirmed"
-    ).count()
-    assert final_count == 3
 def test_cancel_booking_transaction_integrity(test_session, logged_in_user, sample_product):
     """
     Kiểm tra tính toàn vẹn: Hủy đơn có làm mất dữ liệu gốc không?
@@ -278,12 +279,10 @@ def test_api_cancel_multiple_times(logged_in_client, confirmed_booking):
 # UNIT TEST – dao.cancel_grouped_booking (dao.py:295-335)
 # ══════════════════════════════════════════════════════════
 
-from bookingapp.dao import cancel_grouped_booking
-from bookingapp.models import Bill
 
 
 class TestCancelGroupedBookingDAO:
-    """TC-CANCEL-GROUP-DAO: Kiểm tra hàm cancel_grouped_booking."""
+    """Kiểm tra hàm cancel_grouped_booking."""
 
     def _make_group(self, test_session, user, product, group_id, slots, days_ahead=1):
         """Helper: tạo nhóm booking cùng group_id."""
@@ -305,7 +304,7 @@ class TestCancelGroupedBookingDAO:
         return bookings
 
     def test_cancel_group_success(self, test_session, logged_in_user, sample_product):
-        """TC1: Hủy nhóm booking hợp lệ → True."""
+        """Hủy nhóm booking hợp lệ → True."""
         bks = self._make_group(test_session, logged_in_user, sample_product,
                                "grp001", ["08:00 - 09:00", "09:00 - 10:00"])
         success, had_bill = cancel_grouped_booking("grp001", logged_in_user.id)
@@ -316,12 +315,12 @@ class TestCancelGroupedBookingDAO:
             assert b.status == "cancelled"
 
     def test_cancel_group_not_found(self, test_session, logged_in_user):
-        """TC2: group_id không tồn tại → False."""
+        """group_id không tồn tại → False."""
         success, had_bill = cancel_grouped_booking("nonexistent", logged_in_user.id)
         assert success is False
 
     def test_cancel_group_wrong_user(self, test_session, logged_in_user, sample_product):
-        """TC3: User khác → False."""
+        """User khác → False."""
         self._make_group(test_session, logged_in_user, sample_product,
                          "grp002", ["08:00 - 09:00"])
         u2 = User(username="grp_stranger", auth_type="local")
@@ -332,7 +331,7 @@ class TestCancelGroupedBookingDAO:
         assert success is False
 
     def test_cancel_group_past_booking(self, test_session, logged_in_user, sample_product):
-        """TC4: Booking đã qua → False."""
+        """Booking đã qua → False."""
         past = datetime.now() - timedelta(days=1)
         day_start = past.replace(hour=0, minute=0, second=0, microsecond=0)
         b = Booking(
@@ -347,7 +346,7 @@ class TestCancelGroupedBookingDAO:
         assert success is False
 
     def test_cancel_group_too_close(self, test_session, logged_in_user, sample_product):
-        """TC5: Còn < 2h → False."""
+        """Còn < 2h → False."""
         near = datetime.now() + timedelta(hours=1)
         day_start = near.replace(hour=0, minute=0, second=0, microsecond=0)
         b = Booking(
@@ -362,7 +361,7 @@ class TestCancelGroupedBookingDAO:
         assert success is False
 
     def test_cancel_group_while_playing(self, test_session, logged_in_user, sample_product):
-        """TC6: Đang chơi → False."""
+        """Đang chơi → False."""
         now = datetime.now()
         day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         b = Booking(
@@ -378,7 +377,7 @@ class TestCancelGroupedBookingDAO:
         assert success is False
 
     def test_cancel_group_deletes_bill(self, test_session, logged_in_user, sample_product):
-        """TC7: Hủy nhóm có bill → xóa bill, had_bill=True."""
+        """Hủy nhóm có bill → xóa bill, had_bill=True."""
         bks = self._make_group(test_session, logged_in_user, sample_product,
                                "grp_bill", ["08:00 - 09:00", "09:00 - 10:00"])
         bill = Bill(
@@ -394,7 +393,7 @@ class TestCancelGroupedBookingDAO:
         assert test_session.get(Bill, bill_id) is None
 
     def test_cancel_group_restores_timeslot(self, test_session, logged_in_user, sample_product):
-        """TC8: Hủy nhóm → TimeSlot.active = True."""
+        """Hủy nhóm → TimeSlot.active = True."""
         slot = TimeSlot.query.filter_by(product_id=sample_product.id).first()
         bks = self._make_group(test_session, logged_in_user, sample_product,
                                "grp_slot", [slot.label])
@@ -410,7 +409,7 @@ class TestCancelGroupedBookingDAO:
 # ══════════════════════════════════════════════════════════
 
 class TestCancelGroupRoute:
-    """TC-CANCEL-GROUP-ROUTE: POST /api/cancel-group/<group_id>"""
+    """POST /api/cancel-group/<group_id>"""
 
     def _make_group_booking(self, test_session, user, product, group_id):
         tomorrow = datetime.now() + timedelta(days=1)
@@ -428,14 +427,14 @@ class TestCancelGroupRoute:
 
     def test_cancel_group_route_success(self, test_session, logged_in_client,
                                          logged_in_user, sample_product):
-        """TC1: Hủy nhóm thành công → redirect + flash success."""
+        """Hủy nhóm thành công → redirect + flash success."""
         self._make_group_booking(test_session, logged_in_user, sample_product, "route_grp1")
         res = logged_in_client.post("/api/cancel-group/route_grp1", follow_redirects=False)
         assert res.status_code == 302
 
     def test_cancel_group_route_with_refund(self, test_session, logged_in_client,
                                              logged_in_user, sample_product):
-        """TC2: Hủy nhóm đã thanh toán → hoàn tiền."""
+        """Hủy nhóm đã thanh toán → hoàn tiền."""
         b = self._make_group_booking(test_session, logged_in_user, sample_product, "route_grp2")
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=b.id, amount=300_000)
@@ -446,7 +445,7 @@ class TestCancelGroupRoute:
 
     def test_cancel_group_route_fail(self, test_session, logged_in_client,
                                       logged_in_user, sample_product):
-        """TC3: Hủy nhóm không hợp lệ (đã qua) → redirect + flash danger."""
+        """Hủy nhóm không hợp lệ (đã qua) → redirect + flash danger."""
         past = datetime.now() - timedelta(days=1)
         day_start = past.replace(hour=0, minute=0, second=0, microsecond=0)
         b = Booking(

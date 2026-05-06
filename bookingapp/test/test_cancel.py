@@ -1,4 +1,9 @@
 import pytest
+from bookingapp.dao import create_booking, cancel_booking_by_id
+from bookingapp.models import Booking, Category, Product
+from bookingapp import db
+from datetime import datetime, timedelta, time
+
 from datetime import datetime, timedelta
 from bookingapp.models import User, Category, Product, Booking
 from bookingapp.dao import cancel_booking_by_id, create_booking
@@ -175,10 +180,10 @@ def test_cancel_allows_rebooking_within_limit(test_session, logged_in_user, samp
     TC: Kiểm tra sau khi hủy đơn trên sân A, người dùng có thể đặt sân D mới
     mà không bị chặn bởi giới hạn 3 sân khác nhau/ngày.
     """
-    from bookingapp.dao import create_booking, cancel_booking_by_id
-    from bookingapp.models import Booking, Category, Product
-    from bookingapp import db
-    from datetime import datetime, timedelta, time
+    # from bookingapp.dao import create_booking, cancel_booking_by_id
+    # from bookingapp.models import Booking, Category, Product
+    # from bookingapp import db
+    # from datetime import datetime, timedelta, time
 
     sel_date_obj = (datetime.now() + timedelta(days=2)).date()
     day_start = datetime.combine(sel_date_obj, time.min)

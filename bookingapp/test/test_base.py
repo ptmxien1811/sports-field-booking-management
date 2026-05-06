@@ -14,7 +14,9 @@ from flask import Flask
 # test_base.py — thêm hàm create_app_with_admin và fixture admin_app
 
 def create_app(include_admin=False):
-    template_dir = os.path.abspath("bookingapp/templates")
+    template_dir = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), '..', 'templates')
+    )
     app = Flask(__name__, template_folder=template_dir)
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///:memory:"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False

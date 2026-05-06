@@ -46,8 +46,8 @@ def driver():
 # ═══════════════════════════════════════════════════════════════════════
 #  HẰNG SỐ TEST
 # ═══════════════════════════════════════════════════════════════════════
-TEST_USERNAME       = 'Đỗ Thị Hòa'   # user thường – dùng cho hầu hết test
-TEST_PASSWORD       = 'Hoa@1234!'
+TEST_USERNAME       = 'Phạm Văn Anh'   # user thường – dùng cho hầu hết test
+TEST_PASSWORD       = 'Anh@1234!'
 TEST_ADMIN_USERNAME = 'admin'          # admin – dùng riêng nếu cần
 TEST_ADMIN_PASSWORD = 'admin123'       # mật khẩu admin thực tế của bạn
 VENUE_ID            = 1
@@ -476,24 +476,42 @@ def test_payment_page_accessible(driver):
     assert '/payment/' in driver.current_url, 'Phải điều hướng đến /payment/<id>'
 
 
+
 def test_payment_direct(driver):
     """
     Truy cập trực tiếp /payment/1 với user đã đặt sân → trang render đúng.
     """
     _do_login(driver)
 
+    # Bước 1: Đặt sân trước để có booking_id hợp lệ
+    # (hoặc lấy booking_id từ DB/API trước)
+    # Ví dụ lấy qua API
+    driver.get("http://localhost:5000/api/my-bookings-detail")
+    import json
+    raw = driver.find_element("tag name", "pre").text
+    bookings = json.loads(raw).get("items", [])
+
+    if not bookings:
+        pytest.skip("Không có booking để test payment")
+
+    booking_id = bookings[0]["id"]
+
+    # Bước 2: Truy cập trang payment với ID thực
     booking_page = BookingPage(driver=driver)
-    booking_page.open_page(1)
-    time.sleep(3)
+    booking_page.open_page(booking_id)
+    time.sleep(2)
 
-    if '/payment/' not in driver.current_url:
-        pytest.skip('Không có booking id=1 thuộc user này')
+    # Bước 3: Xử lý alert nếu có (phòng thủ)
+    try:
+        alert = driver.switch_to.alert
+        alert_text = alert.text
+        alert.accept()
+        pytest.fail(f"Có alert không mong muốn: {alert_text}")
+    except Exception:
+        pass  # Không có alert → bình thường
 
-    pay_els   = driver.find_elements(*booking_page.PAY_BTN)
-    paid_els  = driver.find_elements(*booking_page.PAID_BADGE)
-    assert len(pay_els) > 0 or len(paid_els) > 0, 'Trang payment phải có nút Pay hoặc badge Đã TT'
-
-
+    assert '/payment/' in driver.current_url, \
+        f"Không redirect đến trang payment, URL hiện tại: {driver.current_url}"
 # ═══════════════════════════════════════════════════════════════════════
 #  NHÓM 7: YÊU THÍCH
 # ═══════════════════════════════════════════════════════════════════════

@@ -1,7 +1,3 @@
-"""
-test_favorite
-"""
-
 import pytest
 import json
 from bookingapp import db

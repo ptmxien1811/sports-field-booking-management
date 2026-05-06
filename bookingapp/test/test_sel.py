@@ -382,7 +382,6 @@ def test_book_slot_without_selecting(driver):
 # ═══════════════════════════════════════════════════════════════════════
 #  NHÓM 5: HỦY SÂN
 # ═══════════════════════════════════════════════════════════════════════
-
 def test_cancel_booking(driver):
     """
     Đặt sân → về trang chủ → hủy → số card giảm đi 1
@@ -398,7 +397,27 @@ def test_cancel_booking(driver):
     if not slots:
         pytest.skip('Không có slot trống để đặt trước khi test hủy')
 
-    venue.select_slot(0)
+    # ── FIX 1: Chọn slot cách ít nhất 2 giờ để được phép hủy ──
+    from datetime import datetime, timedelta
+    now = datetime.now()
+    target_slot = None
+    for slot in slots:
+        try:
+            start_str = slot.text.strip().split(" - ")[0]
+            slot_time = datetime.combine(
+                now.date(),
+                datetime.strptime(start_str, "%H:%M").time()
+            )
+            if slot_time - now >= timedelta(hours=2, minutes=10):
+                target_slot = slot
+                break
+        except Exception:
+            continue
+
+    if not target_slot:
+        pytest.skip('Không có slot nào cách > 2 giờ để test hủy')
+
+    target_slot.click()
     time.sleep(2)
     venue.click_book_btn()
     time.sleep(4)
@@ -422,16 +441,31 @@ def test_cancel_booking(driver):
         pytest.skip('Không tìm thấy nút hủy sân')
 
     cancel_btns[0].click()
-    time.sleep(4)
+    time.sleep(1)
 
+    # ── FIX 2: Xử lý alert confirm trước khi làm gì tiếp theo ──
+    alert_text = ""
+    try:
+        alert = driver.switch_to.alert
+        alert_text = alert.text
+        alert.accept()   # Nhấn OK để xác nhận hủy
+        time.sleep(4)    # Chờ server xử lý và redirect
+    except Exception:
+        time.sleep(4)    # Không có alert, tiếp tục bình thường
+
+    # ── FIX 3: Kiểm tra kết quả sau khi trang đã load lại ──
     try:
         flash = cancel.get_flash_success()
-        assert 'hủy' in flash.lower() or 'thành công' in flash.lower()
+        assert 'hủy' in flash.lower() or 'thành công' in flash.lower(), \
+            f'Flash message không hợp lệ: {flash}'
     except Exception:
+        # Fallback: kiểm tra số card giảm
         count_after = cancel.get_booked_count()
-        assert count_after < count_before, 'Số sân đã đặt phải giảm sau khi hủy'
-
-
+        assert count_after < count_before, (
+            f'Số sân đã đặt phải giảm sau khi hủy '
+            f'(trước: {count_before}, sau: {count_after}). '
+            f'Alert text: "{alert_text}"'
+        )
 # ═══════════════════════════════════════════════════════════════════════
 #  NHÓM 6: THANH TOÁN
 # ═══════════════════════════════════════════════════════════════════════

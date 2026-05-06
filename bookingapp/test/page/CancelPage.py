@@ -30,10 +30,25 @@ class CancelPage(BasePage):
     def cancel_first_single_booking(self):
         self.go_to_booked_tab()
         self.click(*self.SINGLE_CANCEL)
+        self._accept_alert_if_present()
 
     def cancel_first_group_booking(self):
         self.go_to_booked_tab()
         self.click(*self.GROUP_CANCEL)
+        self._accept_alert_if_present()
+
+    def _accept_alert_if_present(self, timeout=3):
+        """Accept browser confirm/alert dialog if one appears."""
+        import time as _time
+        from selenium.common.exceptions import NoAlertPresentException
+        _time.sleep(1)
+        try:
+            alert = self.driver.switch_to.alert
+            text = alert.text
+            alert.accept()
+            return text
+        except NoAlertPresentException:
+            return None
 
     # ── Assertion helpers ─────────────────────────────────────────────────
     def get_flash_success(self):

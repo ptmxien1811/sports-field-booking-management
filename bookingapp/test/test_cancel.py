@@ -1,18 +1,4 @@
 import pytest
-<<<<<<< HEAD
-from bookingapp.dao import create_booking, cancel_booking_by_id
-from bookingapp.models import Booking, Category, Product
-from bookingapp import db
-from datetime import datetime, timedelta, time
-
-from datetime import datetime, timedelta
-from bookingapp.models import User, Category, Product, Booking
-from bookingapp.dao import cancel_booking_by_id, create_booking
-from bookingapp.test.test_base import (test_session, test_app, test_client,
-                                       confirmed_booking, sample_product,
-                                       logged_in_client,logged_in_user,
-                                       sample_category,sample_product,paid_booking,TimeSlot)
-=======
 from datetime import datetime, timedelta, time # Gom chung các class từ datetime
 
 from flask import url_for
@@ -32,7 +18,7 @@ from bookingapp.test.test_base import (
     logged_in_client, logged_in_user,
     sample_category, paid_booking
 )
->>>>>>> e314e0e4d7e1b527a807b05c19d7fa496fb0980d
+
 # ══════════════════════════════════════════════════════════
 # UNIT TEST -/api/cancel-booking/
 # ══════════════════════════════════════════════════════════
@@ -201,14 +187,6 @@ def test_cancel_allows_rebooking_within_limit(test_session, logged_in_user, samp
     Kiểm tra sau khi hủy đơn, người dùng có thể đặt lại đơn mới
     mà không bị chặn bởi giới hạn 3 đơn/ngày.
     """
-<<<<<<< HEAD
-    # from bookingapp.dao import create_booking, cancel_booking_by_id
-    # from bookingapp.models import Booking, Category, Product
-    # from bookingapp import db
-    # from datetime import datetime, timedelta, time
-=======
->>>>>>> e314e0e4d7e1b527a807b05c19d7fa496fb0980d
-
     # Tạo thêm 2 sân khác nữa để test
     p2 = Product(name="Sân 2", price=100000, category_id=1)
     p3 = Product(name="Sân 3", price=100000, category_id=1)

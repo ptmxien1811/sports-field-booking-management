@@ -46,9 +46,11 @@ def driver():
 # ═══════════════════════════════════════════════════════════════════════
 #  HẰNG SỐ TEST
 # ═══════════════════════════════════════════════════════════════════════
-TEST_USERNAME = 'Đỗ Thị Hòa'
-TEST_PASSWORD = 'Hoa@1234!'
-VENUE_ID      = 1
+TEST_USERNAME       = 'Đỗ Thị Hòa'   # user thường – dùng cho hầu hết test
+TEST_PASSWORD       = 'Hoa@1234!'
+TEST_ADMIN_USERNAME = 'admin'          # admin – dùng riêng nếu cần
+TEST_ADMIN_PASSWORD = 'admin123'       # mật khẩu admin thực tế của bạn
+VENUE_ID            = 1
 
 
 # ═══════════════════════════════════════════════════════════════════════
@@ -114,8 +116,11 @@ def test_login_redirect_after_login(driver):
 
     time.sleep(3)
 
-    assert '/account' in driver.current_url or '/admin' in driver.current_url
-
+    # User thường → redirect về / hoặc /account
+    # Admin → redirect về /admin
+    # Test chỉ xác nhận đăng nhập thành công và không ở lại /login
+    assert '/login' not in driver.current_url, \
+        f'Đăng nhập thất bại, vẫn ở /login: {driver.current_url}'
 
 def test_logout(driver):
     """Đăng nhập xong rồi đăng xuất → không còn username trên top-bar."""

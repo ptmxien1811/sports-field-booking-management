@@ -69,14 +69,14 @@ def register_routes(app):
             password = request.form["password"]
             user = User.query.filter_by(username=username).first()
             if user and user.check_password(password):
-                session["user_id"]  = user.id
+                session["user_id"] = user.id
                 session["username"] = user.username
-                # Admin → redirect thẳng trang admin
                 if username.lower() == "admin":
                     return redirect("/admin")
-                return redirect(url_for("home"))
-            flash("Tên đăng nhập hoặc mật khẩu không đúng!", "danger")
-        return render_template("login.html")
+                # Xử lý next param
+                next_url = request.args.get("next") or request.form.get("next")
+                return redirect(next_url if next_url else url_for("home"))
+        return render_template("login.html", error="Tên đăng nhập hoặc mật khẩu không đúng!")
 
 
     @app.route("/logout")
@@ -313,7 +313,7 @@ def register_routes(app):
             sel_date = date_type.today()
 
         user_id       = session.get("user_id")
-        # SAU (ĐÚNG) ✅
+        # SAU (ĐÚNG)
         bookings_today = 0
         if user_id:
             day_start = datetime.combine(sel_date, datetime.min.time())

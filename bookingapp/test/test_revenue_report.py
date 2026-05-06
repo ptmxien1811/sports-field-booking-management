@@ -113,13 +113,13 @@ class TestRevenueCalculation:
     """TC-STATS-CALC: Kiểm tra các phép tính thống kê doanh thu."""
 
     def test_total_revenue_no_bills(self, test_session):
-        """TC1: Không có bill nào → tổng doanh thu = 0."""
+        """ Không có bill nào → tổng doanh thu = 0."""
         total = test_session.query(func.sum(Bill.amount)).scalar() or 0
         assert total == 0
 
     def test_total_revenue_single_bill(self, test_session, confirmed_booking,
                                         logged_in_user, sample_product):
-        """TC2: 1 bill → tổng = giá trị bill đó."""
+        """ 1 bill → tổng = giá trị bill đó."""
         bill = Bill(
             user_id=logged_in_user.id,
             product_id=sample_product.id,
@@ -132,18 +132,18 @@ class TestRevenueCalculation:
         assert total == 300_000
 
     def test_total_revenue_multiple_bills(self, test_session, multi_bills):
-        """TC3: Nhiều bills → tổng doanh thu đúng."""
+        """ Nhiều bills → tổng doanh thu đúng."""
         expected = sum(b.amount for b in multi_bills)
         total = test_session.query(func.sum(Bill.amount)).scalar() or 0
         assert total == expected
 
     def test_total_bookings_count(self, test_session, multi_bills):
-        """TC4: Đếm tổng đơn đặt (bill) đúng."""
+        """ Đếm tổng đơn đặt (bill) đúng."""
         count = test_session.query(func.count(Bill.id)).scalar()
         assert count == len(multi_bills)
 
     def test_revenue_by_date_grouped(self, test_session, multi_bills):
-        """TC5: Doanh thu group by ngày có đúng số ngày."""
+        """ Doanh thu group by ngày có đúng số ngày."""
         rows = test_session.query(
             func.date(Bill.created_at),
             func.sum(Bill.amount)
@@ -151,7 +151,7 @@ class TestRevenueCalculation:
         assert len(rows) == len(multi_bills)
 
     def test_revenue_by_category(self, test_session, paid_booking, category_bills):
-        """TC6: Doanh thu phân chia theo loại sân."""
+        """ Doanh thu phân chia theo loại sân."""
         rows = test_session.query(
             Category.name,
             func.sum(Bill.amount)
@@ -161,7 +161,7 @@ class TestRevenueCalculation:
         assert len(rows) >= 2
 
     def test_revenue_filter_by_date_range(self, test_session, multi_bills):
-        """TC7: Lọc doanh thu theo khoảng ngày."""
+        """ Lọc doanh thu theo khoảng ngày."""
         start = datetime.now() - timedelta(days=6)
         end = datetime.now() - timedelta(days=1)
         filtered = test_session.query(func.sum(Bill.amount)).filter(
@@ -172,7 +172,7 @@ class TestRevenueCalculation:
 
     def test_this_month_revenue(self, test_session, confirmed_booking,
                                  logged_in_user, sample_product):
-        """TC8: Doanh thu tháng này tính đúng."""
+        """ Doanh thu tháng này tính đúng."""
         today = datetime.now().date()
         first_of_month = today.replace(day=1)
         bill = Bill(
@@ -191,7 +191,7 @@ class TestRevenueCalculation:
         assert this_month_rev == 500_000
 
     def test_last_month_revenue_zero_when_no_bills(self, test_session):
-        """TC9: Không có bill tháng trước → doanh thu = 0."""
+        """ Không có bill tháng trước → doanh thu = 0."""
         today = datetime.now().date()
         first_of_this_month = today.replace(day=1)
         last_month_end = first_of_this_month - timedelta(days=1)
@@ -204,35 +204,35 @@ class TestRevenueCalculation:
         assert last_month_rev == 0
 
     def test_growth_rate_positive(self):
-        """TC10: Tăng trưởng dương khi tháng này > tháng trước."""
+        """ Tăng trưởng dương khi tháng này > tháng trước."""
         this_month = 1_000_000
         last_month = 500_000
         growth = round(((this_month - last_month) / last_month) * 100, 1)
         assert growth == 100.0
 
     def test_growth_rate_negative(self):
-        """TC11: Tăng trưởng âm khi tháng này < tháng trước."""
+        """ Tăng trưởng âm khi tháng này < tháng trước."""
         this_month = 400_000
         last_month = 800_000
         growth = round(((this_month - last_month) / last_month) * 100, 1)
         assert growth == -50.0
 
     def test_growth_rate_no_last_month(self):
-        """TC12: Tháng trước = 0, tháng này > 0 → growth = 100%."""
+        """ Tháng trước = 0, tháng này > 0 → growth = 100%."""
         this_month = 500_000
         last_month = 0
         growth = 100.0 if this_month > 0 else 0.0
         assert growth == 100.0
 
     def test_growth_rate_both_zero(self):
-        """TC13: Cả hai tháng = 0 → growth = 0%."""
+        """ Cả hai tháng = 0 → growth = 0%."""
         this_month = 0
         last_month = 0
         growth = 100.0 if this_month > 0 else 0.0
         assert growth == 0.0
 
     def test_category_percent_calculation(self):
-        """TC14: Phần trăm doanh thu theo loại tính đúng."""
+        """ Phần trăm doanh thu theo loại tính đúng."""
         total = 1_000_000
         categories = [
             {"name": "Bóng đá", "revenue": 600_000},
@@ -254,27 +254,27 @@ class TestStatsRoute:
     """TC-STATS-ROUTE: Kiểm tra route /stats với các tham số."""
 
     def test_stats_admin_no_filter(self, admin_client):
-        """TC1: Admin /stats không filter → 200."""
+        """ Admin /stats không filter → 200."""
         res = admin_client.get("/stats", follow_redirects=True)
         assert res.status_code == 200
 
     def test_stats_with_start_date(self, admin_client):
-        """TC2: /stats?start_date=2024-01-01 → 200."""
+        """ /stats?start_date=2024-01-01 → 200."""
         res = admin_client.get("/stats?start_date=2024-01-01")
         assert res.status_code == 200
 
     def test_stats_with_end_date(self, admin_client):
-        """TC3: /stats?end_date=2024-12-31 → 200."""
+        """ /stats?end_date=2024-12-31 → 200."""
         res = admin_client.get("/stats?end_date=2024-12-31")
         assert res.status_code == 200
 
     def test_stats_with_both_dates(self, admin_client):
-        """TC4: /stats với cả start và end → 200."""
+        """ /stats với cả start và end → 200."""
         res = admin_client.get("/stats?start_date=2024-01-01&end_date=2024-06-30")
         assert res.status_code == 200
 
     def test_stats_date_swap_no_error(self, admin_client):
-        """TC5: start > end → tự hoán đổi, không lỗi."""
+        """ start > end → tự hoán đổi, không lỗi."""
         res = admin_client.get(
             "/stats?start_date=2025-12-31&end_date=2024-01-01",
             follow_redirects=True
@@ -282,31 +282,31 @@ class TestStatsRoute:
         assert res.status_code == 200
 
     def test_stats_future_date_clamped(self, admin_client):
-        """TC6: Ngày tương lai bị clamp về hôm nay, không lỗi."""
+        """ Ngày tương lai bị clamp về hôm nay, không lỗi."""
         res = admin_client.get(
             "/stats?start_date=2099-01-01", follow_redirects=True
         )
         assert res.status_code == 200
 
     def test_stats_invalid_date_format(self, admin_client):
-        """TC7: Ngày sai format → không crash (xử lý graceful)."""
+        """ Ngày sai format → không crash (xử lý graceful)."""
         res = admin_client.get(
             "/stats?start_date=not-a-date", follow_redirects=True
         )
         assert res.status_code == 200
 
     def test_stats_non_admin_redirect(self, non_admin_client):
-        """TC8: Non-admin vào /stats → redirect."""
+        """ Non-admin vào /stats → redirect."""
         res = non_admin_client.get("/stats", follow_redirects=False)
         assert res.status_code == 302
 
     def test_stats_unauthenticated_redirect(self, test_client):
-        """TC9: Chưa đăng nhập vào /stats → redirect."""
+        """: Chưa đăng nhập vào /stats → redirect."""
         res = test_client.get("/stats", follow_redirects=False)
         assert res.status_code == 302
 
     def test_stats_response_contains_data(self, admin_client, multi_bills):
-        """TC10: Response /stats chứa nội dung trang HTML."""
+        """ Response /stats chứa nội dung trang HTML."""
         res = admin_client.get("/stats", follow_redirects=True)
         assert res.status_code == 200
         assert b"<html" in res.data or len(res.data) > 100
@@ -322,7 +322,7 @@ class TestStatsIntegration:
     def test_stats_reflects_new_bill(self, test_session, admin_client,
                                       confirmed_booking, logged_in_user,
                                       sample_product):
-        """TC1: Tạo bill mới → doanh thu tăng."""
+        """ Tạo bill mới → doanh thu tăng."""
         total_before = test_session.query(func.sum(Bill.amount)).scalar() or 0
 
         bill = Bill(
@@ -339,7 +339,7 @@ class TestStatsIntegration:
 
     def test_stats_correct_after_bill_delete(self, test_session, confirmed_booking,
                                               logged_in_user, sample_product):
-        """TC2: Xóa bill → doanh thu giảm tương ứng."""
+        """ Xóa bill → doanh thu giảm tương ứng."""
         bill = Bill(
             user_id=logged_in_user.id,
             product_id=sample_product.id,
@@ -358,7 +358,7 @@ class TestStatsIntegration:
         assert total_without == total_with - 300_000
 
     def test_revenue_by_day_order(self, test_session, multi_bills):
-        """TC3: Doanh thu theo ngày trả về đúng thứ tự thời gian."""
+        """ Doanh thu theo ngày trả về đúng thứ tự thời gian."""
         rows = test_session.query(
             func.date(Bill.created_at),
             func.sum(Bill.amount)
@@ -370,7 +370,7 @@ class TestStatsIntegration:
         assert dates == sorted(dates)
 
     def test_category_stats_sum_equals_total(self, test_session, paid_booking):
-        """TC4: Tổng doanh thu từng loại = tổng doanh thu."""
+        """ Tổng doanh thu từng loại = tổng doanh thu."""
         total = test_session.query(func.sum(Bill.amount)).scalar() or 0
         cat_total = test_session.query(
             func.sum(Bill.amount)
@@ -395,7 +395,7 @@ class TestStatsInvalidEndDate:
         assert res.status_code == 200
 
     def test_stats_invalid_both_dates(self, admin_client):
-        """TC2: Cả start và end đều sai format → xử lý graceful."""
+        """ Cả start và end đều sai format → xử lý graceful."""
         res = admin_client.get(
             "/stats?start_date=abc&end_date=xyz", follow_redirects=True
         )

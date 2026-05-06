@@ -30,7 +30,7 @@ class TestCreateBookingDAO:
     """TC-BOOK-DAO: Kiểm tra logic nghiệp vụ create_booking."""
 
     def test_booking_success(self, test_session, logged_in_user, sample_product):
-        """TC1: Đặt sân hợp lệ → thành công."""
+        """ Đặt sân hợp lệ → thành công."""
         tomorrow = (datetime.now() + timedelta(days=1)).date()
         booking, err = create_booking(
             user_id=logged_in_user.id,
@@ -45,7 +45,7 @@ class TestCreateBookingDAO:
         assert booking.product_id == sample_product.id
 
     def test_booking_past_date_rejected(self, test_session, logged_in_user, sample_product):
-        """TC2: Không đặt sân trong quá khứ."""
+        """ Không đặt sân trong quá khứ."""
         yesterday = (datetime.now() - timedelta(days=1)).date()
         booking, err = create_booking(
             user_id=logged_in_user.id,
@@ -59,7 +59,7 @@ class TestCreateBookingDAO:
 
     def test_booking_slot_less_than_1_hour_rejected(self, test_session, logged_in_user,
                                                      sample_product):
-        """TC3: Khung giờ < 1 tiếng bị từ chối."""
+        """ Khung giờ < 1 tiếng bị từ chối."""
         tomorrow = (datetime.now() + timedelta(days=1)).date()
         booking, err = create_booking(
             user_id=logged_in_user.id,
@@ -72,7 +72,7 @@ class TestCreateBookingDAO:
         assert "1 giờ" in err
 
     def test_booking_max_3_per_day(self, test_session, logged_in_user):
-        """TC4: Không đặt quá 3 sân/ngày."""
+        """ Không đặt quá 3 sân/ngày."""
         c = Category(name="Cat3/day")
         test_session.add(c)
         test_session.commit()
@@ -100,7 +100,7 @@ class TestCreateBookingDAO:
 
     def test_booking_conflict_same_slot_same_product(self, test_session, logged_in_user,
                                                       sample_product):
-        """TC5: Trùng slot cùng sân → từ chối."""
+        """ Trùng slot cùng sân → từ chối."""
         u2 = User(username="u2_conflict", auth_type="local")
         u2.set_password("Test@1234")
         test_session.add(u2)
@@ -116,7 +116,7 @@ class TestCreateBookingDAO:
 
     def test_booking_different_slots_same_product_allowed(self, test_session, logged_in_user,
                                                            sample_product):
-        """TC6: Khác slot cùng sân → được phép."""
+        """ Khác slot cùng sân → được phép."""
         u2 = User(username="u2_diffslot", auth_type="local")
         u2.set_password("Test@1234")
         test_session.add(u2)
@@ -131,7 +131,7 @@ class TestCreateBookingDAO:
 
     def test_booking_same_slot_different_products_allowed(self, test_session, logged_in_user,
                                                            sample_category):
-        """TC7: Cùng slot nhưng khác sân → được phép (user đặt 2 sân khác nhau)."""
+        """ Cùng slot nhưng khác sân → được phép (user đặt 2 sân khác nhau)."""
         p1 = Product(name="San_diff1", price=100_000, category_id=sample_category.id)
         p2 = Product(name="San_diff2", price=100_000, category_id=sample_category.id)
         test_session.add_all([p1, p2])
@@ -145,7 +145,7 @@ class TestCreateBookingDAO:
         assert err2 is None
 
     def test_booking_saves_correct_times(self, test_session, logged_in_user, sample_product):
-        """TC8: start_time và end_time lưu đúng."""
+        """ start_time và end_time lưu đúng."""
         tomorrow = (datetime.now() + timedelta(days=1)).date()
         booking, _ = create_booking(logged_in_user.id, sample_product.id,
                                     "09:00 - 10:00", tomorrow)
@@ -154,7 +154,7 @@ class TestCreateBookingDAO:
 
     def test_booking_different_days_independent(self, test_session, logged_in_user,
                                                  sample_category):
-        """TC9: Giới hạn 3/ngày chỉ áp dụng trong ngày, ngày khác reset."""
+        """ Giới hạn 3/ngày chỉ áp dụng trong ngày, ngày khác reset."""
         c = Category(name="CatDays")
         test_session.add(c)
         test_session.commit()
@@ -188,14 +188,14 @@ class TestCancelBookingDAO:
     """TC-CANCEL-DAO: Kiểm tra hàm cancel_booking_by_id."""
 
     def test_cancel_success(self, test_session, logged_in_user, confirmed_booking):
-        """TC1: Hủy sân của chính mình thành công → status='cancelled'."""
+        """: Hủy sân của chính mình thành công → status='cancelled'."""
         result = cancel_booking_by_id(confirmed_booking.id, logged_in_user.id)
         assert result is True
         updated = Booking.query.get(confirmed_booking.id)
         assert updated.status == "cancelled"
 
     def test_cancel_wrong_user(self, test_session, confirmed_booking):
-        """TC2: User khác không được hủy sân."""
+        """ User khác không được hủy sân."""
         u2 = User(username="other_cancel", auth_type="local")
         u2.set_password("Test@1234")
         test_session.add(u2)
@@ -205,12 +205,12 @@ class TestCancelBookingDAO:
         assert result is False
 
     def test_cancel_nonexistent_booking(self, test_session, logged_in_user):
-        """TC3: Booking không tồn tại → False."""
+        """ Booking không tồn tại → False."""
         result = cancel_booking_by_id(99999, logged_in_user.id)
         assert result is False
 
     def test_cancel_time_constraint_ok(self, test_session, logged_in_user, sample_product):
-        """TC4: Còn hơn 2 giờ → điều kiện được phép hủy."""
+        """ Còn hơn 2 giờ → điều kiện được phép hủy."""
         future = datetime.now() + timedelta(hours=3)
         b = Booking(
             user_id=logged_in_user.id,
@@ -228,7 +228,7 @@ class TestCancelBookingDAO:
         assert time_until_hours > 2  # điều kiện cho phép hủy
 
     def test_cancel_time_constraint_denied(self, test_session, logged_in_user, sample_product):
-        """TC5: Còn < 2 giờ → điều kiện KHÔNG cho phép hủy."""
+        """ Còn < 2 giờ → điều kiện KHÔNG cho phép hủy."""
         future = datetime.now() + timedelta(hours=1, minutes=30)
         b = Booking(
             user_id=logged_in_user.id,
@@ -246,7 +246,7 @@ class TestCancelBookingDAO:
         assert time_until_hours < 2  # điều kiện không cho phép hủy
 
     def test_cancel_while_playing(self, test_session, logged_in_user, sample_product):
-        """TC6: Đang trong giờ chơi → không được hủy."""
+        """ Đang trong giờ chơi → không được hủy."""
         now = datetime.now()
         b = Booking(
             user_id=logged_in_user.id,
@@ -264,7 +264,7 @@ class TestCancelBookingDAO:
         assert is_playing is True  # Phải đang trong giờ → không được hủy
 
     def test_cancel_after_end_time(self, test_session, logged_in_user, sample_product):
-        """TC7: Đã qua giờ chơi → không được hủy."""
+        """ Đã qua giờ chơi → không được hủy."""
         past = datetime.now() - timedelta(hours=2)
         b = Booking(
             user_id=logged_in_user.id,
@@ -290,7 +290,7 @@ class TestBookAPI:
     """TC-BOOK-API: POST /api/book"""
 
     def test_book_unauthenticated(self, test_client, sample_product):
-        """TC1: Chưa đăng nhập → 401."""
+        """ Chưa đăng nhập → 401."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         res = test_client.post("/api/book", json={
             "product_id": sample_product.id,
@@ -302,7 +302,7 @@ class TestBookAPI:
         assert data["ok"] is False
 
     def test_book_success(self, logged_in_client, sample_product):
-        """TC2: Đăng nhập, slot hợp lệ → đặt thành công."""
+        """ Đăng nhập, slot hợp lệ → đặt thành công."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         res = logged_in_client.post("/api/book", json={
             "product_id": sample_product.id,
@@ -315,7 +315,7 @@ class TestBookAPI:
         assert "booking_ids" in data
 
     def test_book_multiple_slots(self, logged_in_client, sample_product):
-        """TC3: Đặt nhiều slot cùng lúc (list slots)."""
+        """ Đặt nhiều slot cùng lúc (list slots)."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         res = logged_in_client.post("/api/book", json={
             "product_id": sample_product.id,
@@ -328,7 +328,7 @@ class TestBookAPI:
         assert len(data["booking_ids"]) == 2
 
     def test_book_no_slot_provided(self, logged_in_client, sample_product):
-        """TC4: Không chọn slot → lỗi 400."""
+        """ Không chọn slot → lỗi 400."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         res = logged_in_client.post("/api/book", json={
             "product_id": sample_product.id,
@@ -340,7 +340,7 @@ class TestBookAPI:
         assert data["ok"] is False
 
     def test_book_invalid_date(self, logged_in_client, sample_product):
-        """TC5: Ngày không hợp lệ → 400."""
+        """ Ngày không hợp lệ → 400."""
         res = logged_in_client.post("/api/book", json={
             "product_id": sample_product.id,
             "slot": "08:00 - 09:00",
@@ -349,7 +349,7 @@ class TestBookAPI:
         assert res.status_code == 400
 
     def test_book_duplicate_slot_returns_error(self, logged_in_client, sample_product):
-        """TC6: Slot đã được người khác đặt → lỗi."""
+        """ Slot đã được người khác đặt → lỗi."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         # Đặt lần đầu
         logged_in_client.post("/api/book", json={
@@ -376,7 +376,7 @@ class TestCancelBookingRoute:
     """TC-CANCEL-ROUTE: POST /api/cancel-booking/<id>"""
 
     def test_cancel_route_success(self, logged_in_client, confirmed_booking):
-        """TC1: Hủy sân hợp lệ → redirect với flash success."""
+        """ Hủy sân hợp lệ → redirect với flash success."""
         res = logged_in_client.post(
             f"/api/cancel-booking/{confirmed_booking.id}",
             follow_redirects=False,
@@ -385,7 +385,7 @@ class TestCancelBookingRoute:
 
     def test_cancel_route_with_refund(self, test_session, logged_in_client,
                                        paid_booking):
-        """TC2: Hủy sân đã thanh toán → hoàn tiền (xóa bill)."""
+        """ Hủy sân đã thanh toán → hoàn tiền (xóa bill)."""
         booking, bill = paid_booking
         bill_id = bill.id
 
@@ -398,7 +398,7 @@ class TestCancelBookingRoute:
         assert remaining_bill is None  # Bill đã bị xóa (hoàn tiền)
 
     def test_cancel_route_wrong_user(self, test_session, test_client, confirmed_booking):
-        """TC3: User khác không được hủy sân → redirect."""
+        """ User khác không được hủy sân → redirect."""
         u2 = User(username="other_route", auth_type="local")
         u2.set_password("Test@1234")
         test_session.add(u2)
@@ -415,7 +415,7 @@ class TestCancelBookingRoute:
         assert res.status_code == 302  # redirect về home
 
     def test_cancel_route_unauthenticated(self, test_client, confirmed_booking):
-        """TC4: Chưa đăng nhập → redirect."""
+        """ Chưa đăng nhập → redirect."""
         res = test_client.post(
             f"/api/cancel-booking/{confirmed_booking.id}",
             follow_redirects=False,
@@ -424,7 +424,7 @@ class TestCancelBookingRoute:
         assert res.status_code == 302
 
     def test_cancel_route_nonexistent(self, logged_in_client):
-        """TC5: Booking không tồn tại → redirect."""
+        """ Booking không tồn tại → redirect."""
         res = logged_in_client.post(
             "/api/cancel-booking/99999",
             follow_redirects=False,
@@ -440,18 +440,18 @@ class TestMyBookingsAPI:
     """TC-BOOK-MY: GET /api/my-bookings & /api/my-bookings-detail"""
 
     def test_my_bookings_count(self, logged_in_client, confirmed_booking):
-        """TC1: Số lượng booking trả về đúng."""
+        """ Số lượng booking trả về đúng."""
         res = logged_in_client.get("/api/my-bookings")
         data = res.get_json()
         assert data["bookings"] == 1
 
     def test_my_bookings_unauthenticated(self, test_client):
-        """TC2: Chưa đăng nhập → 401."""
+        """Chưa đăng nhập → 401."""
         res = test_client.get("/api/my-bookings")
         assert res.status_code == 401
 
     def test_my_bookings_detail_structure(self, logged_in_client, confirmed_booking):
-        """TC3: Detail trả về đúng các field."""
+        """ Detail trả về đúng các field."""
         res = logged_in_client.get("/api/my-bookings-detail")
         data = res.get_json()
         assert "items" in data
@@ -461,7 +461,7 @@ class TestMyBookingsAPI:
             assert field in item
 
     def test_my_bookings_empty(self, logged_in_client):
-        """TC4: User chưa có booking → items rỗng."""
+        """ User chưa có booking → items rỗng."""
         res = logged_in_client.get("/api/my-bookings-detail")
         data = res.get_json()
         assert data["items"] == []
@@ -501,7 +501,7 @@ class TestBookGroupEdgeCases:
     """TC-BOOK-GROUP: Kiểm tra group_id và partial failure."""
 
     def test_book_multi_slots_one_fails_clears_group_id(self, logged_in_client, sample_product):
-        """TC1: Đặt 2 slot nhưng 1 slot trong quá khứ → chỉ 1 thành công, group_id=None."""
+        """ Đặt 2 slot nhưng 1 slot trong quá khứ → chỉ 1 thành công, group_id=None."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         yesterday = str((datetime.now() - timedelta(days=1)).date())
         # Đặt lần đầu slot hợp lệ rồi đặt lại cùng slot → trùng
@@ -524,7 +524,7 @@ class TestBookGroupEdgeCases:
         assert b.group_id is None
 
     def test_book_multi_slots_partial_failure_message(self, logged_in_client, sample_product):
-        """TC2: Đặt 2 slot, 1 thất bại → msg chứa 'thất bại' (index.py:392)."""
+        """ Đặt 2 slot, 1 thất bại → msg chứa 'thất bại' (index.py:392)."""
         tomorrow = str((datetime.now() + timedelta(days=1)).date())
         # Đặt 1 slot trước
         logged_in_client.post("/api/book", json={

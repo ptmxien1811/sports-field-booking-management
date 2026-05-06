@@ -162,7 +162,7 @@ class TestRegisterAPI:
     """TC-AUTH-REG: POST /register"""
 
     def test_register_success(self, test_client):
-        """TC1: Đăng ký thành công với dữ liệu hợp lệ."""
+        """ Đăng ký thành công với dữ liệu hợp lệ."""
         res = test_client.post("/register", data={
             "username": "newuser",
             "password": "Test@1234",
@@ -175,7 +175,7 @@ class TestRegisterAPI:
         assert user is not None
 
     def test_register_duplicate_username(self, test_client, logged_in_user):
-        """TC2: Username đã tồn tại → báo lỗi."""
+        """ Username đã tồn tại → báo lỗi."""
         res = test_client.post("/register", data={
             "username": logged_in_user.username,
             "password": "Test@1234",
@@ -184,7 +184,7 @@ class TestRegisterAPI:
         assert b"\u0111\xe3 t\u1ed3n t\u1ea1i" in res.data or res.status_code == 200
 
     def test_register_password_mismatch(self, test_client):
-        """TC3: Mật khẩu xác nhận không khớp."""
+        """ Mật khẩu xác nhận không khớp."""
         res = test_client.post("/register", data={
             "username": "mismatch_user",
             "password": "Test@1234",
@@ -194,7 +194,7 @@ class TestRegisterAPI:
         assert "kh\u00f4ng kh\u1edbp" in res.data.decode("utf-8")
 
     def test_register_weak_password(self, test_client):
-        """TC4: Mật khẩu yếu bị từ chối."""
+        """ Mật khẩu yếu bị từ chối."""
         res = test_client.post("/register", data={
             "username": "weakpw_user",
             "password": "abc",
@@ -204,7 +204,7 @@ class TestRegisterAPI:
         assert "M\u1eadt kh\u1ea9u" in res.data.decode("utf-8")
 
     def test_register_invalid_email(self, test_client):
-        """TC5: Email sai format."""
+        """ Email sai format."""
         res = test_client.post("/register", data={
             "username": "emailtest",
             "password": "Test@1234",
@@ -215,7 +215,7 @@ class TestRegisterAPI:
         assert "Email" in res.data.decode("utf-8")
 
     def test_register_invalid_phone(self, test_client):
-        """TC6: Số điện thoại không hợp lệ."""
+        """ Số điện thoại không hợp lệ."""
         res = test_client.post("/register", data={
             "username": "phonetest",
             "password": "Test@1234",
@@ -226,7 +226,7 @@ class TestRegisterAPI:
         assert "\u0110i\u1ec7n tho\u1ea1i" in res.data.decode("utf-8") or "kh\u00f4ng h\u1ee3p l\u1ec7" in res.data.decode("utf-8")
 
     def test_register_duplicate_email(self, test_client, logged_in_user):
-        """TC7: Email đã sử dụng."""
+        """ Email đã sử dụng."""
         res = test_client.post("/register", data={
             "username": "anotheruser",
             "password": "Test@1234",
@@ -236,7 +236,7 @@ class TestRegisterAPI:
         assert res.status_code == 200
 
     def test_register_empty_username(self, test_client):
-        """TC8: Username rỗng."""
+        """ Username rỗng."""
         res = test_client.post("/register", data={
             "username": "",
             "password": "Test@1234",
@@ -254,7 +254,7 @@ class TestLoginAPI:
     """TC-AUTH-LOGIN: POST /login"""
 
     def test_login_success(self, test_client, logged_in_user):
-        """TC1: Đăng nhập thành công."""
+        """ Đăng nhập thành công."""
         res = test_client.post("/login", data={
             "username": "testuser",
             "password": "Test@1234",
@@ -262,7 +262,7 @@ class TestLoginAPI:
         assert res.status_code == 200
 
     def test_login_wrong_password(self, test_client, logged_in_user):
-        """TC2: Sai mật khẩu → flash lỗi."""
+        """ Sai mật khẩu → flash lỗi."""
         res = test_client.post("/login", data={
             "username": "testuser",
             "password": "WrongPwd@9",
@@ -271,7 +271,7 @@ class TestLoginAPI:
         assert "kh\u00f4ng \u0111\u00fang" in res.data.decode("utf-8")
 
     def test_login_nonexistent_user(self, test_client):
-        """TC3: Username không tồn tại."""
+        """ Username không tồn tại."""
         res = test_client.post("/login", data={
             "username": "ghost_user",
             "password": "Test@1234",
@@ -280,7 +280,7 @@ class TestLoginAPI:
         assert "kh\u00f4ng \u0111\u00fang" in res.data.decode("utf-8")
 
     def test_login_admin_redirect(self, test_client, admin_user):
-        """TC4: Đăng nhập admin → redirect /admin."""
+        """ Đăng nhập admin → redirect /admin."""
         res = test_client.post("/login", data={
             "username": "admin",
             "password": "Admin@1234",
@@ -289,7 +289,7 @@ class TestLoginAPI:
         assert "/admin" in res.headers.get("Location", "")
 
     def test_logout_clears_session(self, logged_in_client):
-        """TC5: Logout xóa session."""
+        """ Logout xóa session."""
         res = logged_in_client.get("/logout", follow_redirects=False)
         assert res.status_code == 302
         with logged_in_client.session_transaction() as sess:
@@ -304,7 +304,7 @@ class TestLoginEmailPhone:
     """TC-AUTH-ALT: Đăng nhập bằng email/SĐT."""
 
     def test_login_by_email_success(self, test_client, logged_in_user):
-        """TC1: Đăng nhập email đúng."""
+        """ Đăng nhập email đúng."""
         res = test_client.post("/login/email", data={
             "email": "test@example.com",
             "password": "Test@1234",
@@ -312,7 +312,7 @@ class TestLoginEmailPhone:
         assert res.status_code == 200
 
     def test_login_by_email_invalid_format(self, test_client):
-        """TC2: Email sai format → báo lỗi."""
+        """ Email sai format → báo lỗi."""
         res = test_client.post("/login/email", data={
             "email": "bademail",
             "password": "Test@1234",
@@ -321,7 +321,7 @@ class TestLoginEmailPhone:
         assert "Email" in res.data.decode("utf-8")
 
     def test_login_by_phone_success(self, test_client, logged_in_user):
-        """TC3: Đăng nhập SĐT đúng."""
+        """ Đăng nhập SĐT đúng."""
         res = test_client.post("/login/phone", data={
             "phone": "0912345678",
             "password": "Test@1234",
@@ -329,7 +329,7 @@ class TestLoginEmailPhone:
         assert res.status_code == 200
 
     def test_login_by_phone_invalid(self, test_client):
-        """TC4: SĐT sai format."""
+        """ SĐT sai format."""
         res = test_client.post("/login/phone", data={
             "phone": "0123abc456",
             "password": "Test@1234",
@@ -346,7 +346,7 @@ class TestAccountAPI:
     """TC-AUTH-ACCT: API quản lý tài khoản."""
 
     def test_change_password_success(self, logged_in_client):
-        """TC1: Đổi mật khẩu thành công."""
+        """ Đổi mật khẩu thành công."""
         res = logged_in_client.post("/api/change-password", json={
             "current_password": "Test@1234",
             "new_password": "NewPass@99",
@@ -355,7 +355,7 @@ class TestAccountAPI:
         assert data["ok"] is True
 
     def test_change_password_wrong_current(self, logged_in_client):
-        """TC2: Mật khẩu hiện tại sai."""
+        """ Mật khẩu hiện tại sai."""
         res = logged_in_client.post("/api/change-password", json={
             "current_password": "WrongPwd@1",
             "new_password": "NewPass@99",
@@ -365,7 +365,7 @@ class TestAccountAPI:
         assert "hi\u1ec7n t\u1ea1i" in data["msg"]
 
     def test_change_password_weak_new(self, logged_in_client):
-        """TC3: Mật khẩu mới yếu."""
+        """ Mật khẩu mới yếu."""
         res = logged_in_client.post("/api/change-password", json={
             "current_password": "Test@1234",
             "new_password": "weak",
@@ -374,7 +374,7 @@ class TestAccountAPI:
         assert data["ok"] is False
 
     def test_change_password_unauthenticated(self, test_client):
-        """TC4: Chưa đăng nhập → 401."""
+        """Chưa đăng nhập → 401."""
         res = test_client.post("/api/change-password", json={
             "current_password": "Test@1234",
             "new_password": "NewPass@99",
@@ -382,7 +382,7 @@ class TestAccountAPI:
         assert res.status_code == 401
 
     def test_update_profile_success(self, logged_in_client):
-        """TC5: Cập nhật email thành công."""
+        """ Cập nhật email thành công."""
         res = logged_in_client.post("/api/update-profile", json={
             "email": "updated@example.com",
         })
@@ -456,7 +456,7 @@ class TestRegisterGet:
 
 class TestLoginEmailExtra:
     def test_login_email_wrong_password(self, test_client, logged_in_user):
-        """TC: Email đúng, mật khẩu sai → render lại trang login (200)."""
+        """ Email đúng, mật khẩu sai → render lại trang login (200)."""
         res = test_client.post("/login/email", data={
             "email": "test@example.com",
             "password": "WrongPwd@99",
@@ -464,7 +464,7 @@ class TestLoginEmailExtra:
         assert res.status_code == 200
 
     def test_login_email_nonexistent(self, test_client):
-        """TC: Email không tồn tại → render lại trang login (200)."""
+        """ Email không tồn tại → render lại trang login (200)."""
         res = test_client.post("/login/email", data={
             "email": "ghost@example.com",
             "password": "Test@1234",
@@ -472,7 +472,7 @@ class TestLoginEmailExtra:
         assert res.status_code == 200
 
     def test_login_email_get(self, test_client):
-        """TC: GET /login/email → 200."""
+        """ GET /login/email → 200."""
         res = test_client.get("/login/email")
         assert res.status_code == 200
 
@@ -483,7 +483,7 @@ class TestLoginEmailExtra:
 
 class TestRegisterEmail:
     def test_register_email_success(self, test_client):
-        """TC1: Đăng ký email hợp lệ → redirect."""
+        """ Đăng ký email hợp lệ → redirect."""
         res = test_client.post("/register/email", data={
             "email": "newemail@example.com",
             "password": "Test@1234",
@@ -493,7 +493,7 @@ class TestRegisterEmail:
         assert res.status_code == 302
 
     def test_register_email_invalid_format(self, test_client):
-        """TC2: Email sai format."""
+        """ Email sai format."""
         res = test_client.post("/register/email", data={
             "email": "bad-email",
             "password": "Test@1234",
@@ -503,7 +503,7 @@ class TestRegisterEmail:
         assert "Email" in res.data.decode("utf-8")
 
     def test_register_email_duplicate(self, test_client, logged_in_user):
-        """TC3: Email đã tồn tại."""
+        """ Email đã tồn tại."""
         res = test_client.post("/register/email", data={
             "email": logged_in_user.email,
             "password": "Test@1234",
@@ -513,7 +513,7 @@ class TestRegisterEmail:
         assert "đã được sử dụng" in res.data.decode("utf-8")
 
     def test_register_email_weak_password(self, test_client):
-        """TC4: Mật khẩu yếu."""
+        """ Mật khẩu yếu."""
         res = test_client.post("/register/email", data={
             "email": "weak@example.com",
             "password": "abc",
@@ -522,7 +522,7 @@ class TestRegisterEmail:
         assert res.status_code == 200
 
     def test_register_email_password_mismatch(self, test_client):
-        """TC5: Mật khẩu xác nhận không khớp."""
+        """TC Mật khẩu xác nhận không khớp."""
         res = test_client.post("/register/email", data={
             "email": "mismatch@example.com",
             "password": "Test@1234",
@@ -532,7 +532,7 @@ class TestRegisterEmail:
         assert "không khớp" in res.data.decode("utf-8")
 
     def test_register_email_auto_username(self, test_client):
-        """TC6: Không nhập username → tự tạo từ email."""
+        """TC Không nhập username → tự tạo từ email."""
         res = test_client.post("/register/email", data={
             "email": "autoname@example.com",
             "password": "Test@1234",
@@ -545,7 +545,7 @@ class TestRegisterEmail:
         assert u.username == "autoname"
 
     def test_register_email_username_collision(self, test_session, test_client):
-        """TC7: Username trùng → tự thêm số đuôi."""
+        """ Username trùng → tự thêm số đuôi."""
         u = User(username="dupname", auth_type="local")
         u.set_password("Test@1234")
         test_session.add(u)
@@ -562,7 +562,7 @@ class TestRegisterEmail:
         assert u2.username != "dupname"
 
     def test_register_email_get(self, test_client):
-        """TC8: GET /register/email → 200."""
+        """TC GET /register/email → 200."""
         res = test_client.get("/register/email")
         assert res.status_code == 200
 
@@ -600,7 +600,7 @@ class TestLoginPhoneExtra:
 
 class TestRegisterPhone:
     def test_register_phone_success(self, test_client):
-        """TC1: Đăng ký SĐT hợp lệ → redirect."""
+        """ Đăng ký SĐT hợp lệ → redirect."""
         res = test_client.post("/register/phone", data={
             "phone": "0388888888",
             "password": "Test@1234",
@@ -610,7 +610,7 @@ class TestRegisterPhone:
         assert res.status_code == 302
 
     def test_register_phone_invalid(self, test_client):
-        """TC2: SĐT sai format."""
+        """ SĐT sai format."""
         res = test_client.post("/register/phone", data={
             "phone": "12345",
             "password": "Test@1234",
@@ -620,7 +620,7 @@ class TestRegisterPhone:
         assert "không hợp lệ" in res.data.decode("utf-8")
 
     def test_register_phone_duplicate(self, test_client, logged_in_user):
-        """TC3: SĐT đã tồn tại."""
+        """ SĐT đã tồn tại."""
         res = test_client.post("/register/phone", data={
             "phone": logged_in_user.phone,
             "password": "Test@1234",
@@ -630,7 +630,7 @@ class TestRegisterPhone:
         assert "đã được sử dụng" in res.data.decode("utf-8")
 
     def test_register_phone_weak_password(self, test_client):
-        """TC4: Mật khẩu yếu."""
+        """ Mật khẩu yếu."""
         res = test_client.post("/register/phone", data={
             "phone": "0377777777",
             "password": "abc",
@@ -639,7 +639,7 @@ class TestRegisterPhone:
         assert res.status_code == 200
 
     def test_register_phone_password_mismatch(self, test_client):
-        """TC5: Mật khẩu không khớp."""
+        """ Mật khẩu không khớp."""
         res = test_client.post("/register/phone", data={
             "phone": "0366666666",
             "password": "Test@1234",
@@ -649,7 +649,7 @@ class TestRegisterPhone:
         assert "không khớp" in res.data.decode("utf-8")
 
     def test_register_phone_auto_username(self, test_client):
-        """TC6: Không nhập username → tự tạo từ SĐT."""
+        """ Không nhập username → tự tạo từ SĐT."""
         res = test_client.post("/register/phone", data={
             "phone": "0355555555",
             "password": "Test@1234",
@@ -662,7 +662,7 @@ class TestRegisterPhone:
         assert "5555" in u.username
 
     def test_register_phone_username_collision(self, test_session, test_client):
-        """TC7: Username trùng → tự thêm số đuôi."""
+        """ Username trùng → tự thêm số đuôi."""
         u = User(username="user_4444", auth_type="local")
         u.set_password("Test@1234")
         test_session.add(u)
@@ -679,7 +679,7 @@ class TestRegisterPhone:
         assert u2.username != "user_4444"
 
     def test_register_phone_get(self, test_client):
-        """TC8: GET /register/phone → 200."""
+        """GET /register/phone → 200."""
         res = test_client.get("/register/phone")
         assert res.status_code == 200
 
@@ -690,18 +690,18 @@ class TestRegisterPhone:
 
 class TestGoogleOAuth:
     def test_google_login_redirect(self, test_client):
-        """TC1: GET /auth/google → redirect đến Google."""
+        """ GET /auth/google → redirect đến Google."""
         res = test_client.get("/auth/google", follow_redirects=False)
         assert res.status_code == 302
         assert "accounts.google.com" in res.headers.get("Location", "")
 
     def test_google_callback_no_code(self, test_client):
-        """TC2: Callback không có code → redirect login."""
+        """ Callback không có code → redirect login."""
         res = test_client.get("/auth/google/callback", follow_redirects=False)
         assert res.status_code == 302
 
     def test_google_callback_no_token(self, test_client, mocker):
-        """TC3: Google trả về không có access_token → redirect login."""
+        """ Google trả về không có access_token → redirect login."""
         mocker.patch("bookingapp.index.http_requests.post",
                      return_value=mocker.Mock(json=lambda: {}))
         res = test_client.get("/auth/google/callback?code=fakecode",
@@ -709,7 +709,7 @@ class TestGoogleOAuth:
         assert res.status_code == 302
 
     def test_google_callback_new_user(self, test_client, mocker):
-        """TC4: User mới qua Google → tạo tài khoản và đăng nhập."""
+        """ User mới qua Google → tạo tài khoản và đăng nhập."""
         mocker.patch("bookingapp.index.http_requests.post",
                      return_value=mocker.Mock(json=lambda: {"access_token": "tok123"}))
         mocker.patch("bookingapp.index.http_requests.get",
@@ -725,7 +725,7 @@ class TestGoogleOAuth:
         assert u is not None
 
     def test_google_callback_existing_email(self, test_session, test_client, mocker):
-        """TC5: Email đã tồn tại → liên kết google_id (index.py:271-272)."""
+        """ Email đã tồn tại → liên kết google_id (index.py:271-272)."""
         u = User(username="existgoogle", email="exist@gmail.com", auth_type="local")
         u.set_password("Test@1234")
         test_session.add(u)
@@ -745,7 +745,7 @@ class TestGoogleOAuth:
         assert u.google_id == "google_link_id"
 
     def test_google_callback_username_collision(self, test_session, test_client, mocker):
-        """TC6: Username trùng → thêm số đuôi (index.py:277)."""
+        """ Username trùng → thêm số đuôi (index.py:277)."""
         u = User(username="CollisionUser", auth_type="local")
         u.set_password("Test@1234")
         test_session.add(u)
@@ -772,7 +772,7 @@ class TestGoogleOAuth:
 
 class TestMyBookingsDetailUnauth:
     def test_my_bookings_detail_unauthenticated(self, test_client):
-        """TC: Chưa đăng nhập → 401."""
+        """Chưa đăng nhập → 401."""
         res = test_client.get("/api/my-bookings-detail")
         assert res.status_code == 401
 
@@ -783,7 +783,7 @@ class TestMyBookingsDetailUnauth:
 
 class TestUpdateProfilePhone:
     def test_update_profile_duplicate_email(self, test_session, logged_in_client):
-        """TC1: Email đã được người khác dùng → lỗi (index.py:586)."""
+        """ Email đã được người khác dùng → lỗi (index.py:586)."""
         u2 = User(username="otheruser", email="taken@example.com", auth_type="local")
         u2.set_password("Test@1234")
         test_session.add(u2)
@@ -796,7 +796,7 @@ class TestUpdateProfilePhone:
         assert "đã được sử dụng" in data["msg"]
 
     def test_update_profile_invalid_phone(self, logged_in_client):
-        """TC2: SĐT không hợp lệ → lỗi (index.py:590-591)."""
+        """ SĐT không hợp lệ → lỗi (index.py:590-591)."""
         res = logged_in_client.post("/api/update-profile", json={
             "phone": "12345",
         })
@@ -805,7 +805,7 @@ class TestUpdateProfilePhone:
         assert "không hợp lệ" in data["msg"]
 
     def test_update_profile_duplicate_phone(self, test_session, logged_in_client):
-        """TC3: SĐT đã được người khác dùng → lỗi (index.py:592-594)."""
+        """ SĐT đã được người khác dùng → lỗi (index.py:592-594)."""
         u2 = User(username="phoneother", phone="0977777777", auth_type="local")
         u2.set_password("Test@1234")
         test_session.add(u2)
@@ -818,7 +818,7 @@ class TestUpdateProfilePhone:
         assert "đã được sử dụng" in data["msg"]
 
     def test_update_profile_valid_phone(self, logged_in_client):
-        """TC4: SĐT hợp lệ → thành công (index.py:595)."""
+        """ SĐT hợp lệ → thành công (index.py:595)."""
         res = logged_in_client.post("/api/update-profile", json={
             "phone": "0966666666",
         })

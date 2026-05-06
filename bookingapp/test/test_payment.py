@@ -68,7 +68,7 @@ class TestBillModel:
     """TC-PAY-MODEL: Kiểm tra tạo và ràng buộc Bill trong DB."""
 
     def test_bill_creation(self, test_session, confirmed_booking, logged_in_user, sample_product):
-        """TC1: Tạo Bill thành công."""
+        """ Tạo Bill thành công."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=sample_product.price,
                     payment_method="direct")
@@ -78,7 +78,7 @@ class TestBillModel:
 
     def test_bill_amount_matches_product_price(self, test_session, confirmed_booking,
                                                 logged_in_user, sample_product):
-        """TC2: amount = price sân."""
+        """ amount = price sân."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=sample_product.price,
                     payment_method="direct")
@@ -88,7 +88,7 @@ class TestBillModel:
 
     def test_bill_default_payment_method(self, test_session, confirmed_booking,
                                           logged_in_user, sample_product):
-        """TC3: payment_method default là 'direct'."""
+        """payment_method default là 'direct'."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=300_000)
         test_session.add(bill)
@@ -97,7 +97,7 @@ class TestBillModel:
 
     def test_bill_online_payment_method(self, test_session, confirmed_booking,
                                          logged_in_user, sample_product):
-        """TC4: payment_method='online' lưu đúng."""
+        """ payment_method='online' lưu đúng."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=300_000,
                     payment_method="online")
@@ -106,7 +106,7 @@ class TestBillModel:
         assert test_session.get(Bill, bill.id).payment_method == "online"
 
     def test_bill_str(self, test_session, confirmed_booking, logged_in_user, sample_product):
-        """TC5: __str__ đúng format."""
+        """ __str__ đúng format."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=300_000)
         test_session.add(bill)
@@ -116,7 +116,7 @@ class TestBillModel:
 
     def test_bill_created_at_auto(self, test_session, confirmed_booking,
                                    logged_in_user, sample_product):
-        """TC6: created_at tự động set."""
+        """ created_at tự động set."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=300_000)
         test_session.add(bill)
@@ -125,7 +125,7 @@ class TestBillModel:
 
     def test_bill_relationships(self, test_session, confirmed_booking,
                                  logged_in_user, sample_product):
-        """TC7: Quan hệ User/Product/Booking đúng."""
+        """ Quan hệ User/Product/Booking đúng."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=sample_product.price)
         test_session.add(bill)
@@ -137,7 +137,7 @@ class TestBillModel:
 
     def test_booking_marked_paid_via_bill(self, test_session, confirmed_booking,
                                            logged_in_user, sample_product):
-        """TC8: Tìm Bill theo booking_id thành công."""
+        """ Tìm Bill theo booking_id thành công."""
         bill = Bill(user_id=logged_in_user.id, product_id=sample_product.id,
                     booking_id=confirmed_booking.id, amount=sample_product.price)
         test_session.add(bill)
@@ -153,30 +153,30 @@ class TestPaymentPage:
     """TC-PAY-PAGE: Kiểm tra truy cập trang thanh toán."""
 
     def test_payment_page_accessible(self, logged_in_client, confirmed_booking):
-        """TC1: Đăng nhập → 200."""
+        """ Đăng nhập → 200."""
         res = logged_in_client.get(f"/payment/{confirmed_booking.id}",
                                     follow_redirects=True)
         assert res.status_code == 200
 
     def test_payment_page_unauthenticated_redirect(self, test_client, confirmed_booking):
-        """TC2: Chưa đăng nhập → 302."""
+        """ Chưa đăng nhập → 302."""
         res = test_client.get(f"/payment/{confirmed_booking.id}",
                                follow_redirects=False)
         assert res.status_code == 302
 
     def test_payment_page_wrong_user(self, another_logged_in_client, confirmed_booking):
-        """TC3: User khác → 302."""
+        """ User khác → 302."""
         res = another_logged_in_client.get(f"/payment/{confirmed_booking.id}",
                                             follow_redirects=False)
         assert res.status_code == 302
 
     def test_payment_page_nonexistent_booking(self, logged_in_client):
-        """TC4: Booking không tồn tại → 302."""
+        """ Booking không tồn tại → 302."""
         res = logged_in_client.get("/payment/99999", follow_redirects=False)
         assert res.status_code == 302
 
     def test_payment_page_already_paid(self, logged_in_client, paid_booking):
-        """TC5: Booking đã trả → vẫn render 200."""
+        """ Booking đã trả → vẫn render 200."""
         booking_obj, _ = paid_booking
         res = logged_in_client.get(f"/payment/{booking_obj.id}",
                                     follow_redirects=True)
@@ -197,7 +197,7 @@ class TestPaymentAPI:
                            content_type="application/json")
 
     def test_payment_success_direct(self, logged_in_client, confirmed_booking):
-        """TC1: Thanh toán trực tiếp → ok=True, có bill_id."""
+        """ Thanh toán trực tiếp → ok=True, có bill_id."""
         res = self._post(logged_in_client, confirmed_booking.id, "direct")
         data = json.loads(res.data)
         assert res.status_code == 200
@@ -205,48 +205,48 @@ class TestPaymentAPI:
         assert "bill_id" in data
 
     def test_payment_success_online(self, logged_in_client, confirmed_booking):
-        """TC2: Thanh toán online → ok=True."""
+        """Thanh toán online → ok=True."""
         data = json.loads(self._post(logged_in_client, confirmed_booking.id, "online").data)
         assert data["ok"] is True
 
     def test_payment_creates_bill_in_db(self, logged_in_client, confirmed_booking):
-        """TC3: Bill xuất hiện trong DB."""
+        """ Bill xuất hiện trong DB."""
         self._post(logged_in_client, confirmed_booking.id, "direct")
         assert Bill.query.filter_by(booking_id=confirmed_booking.id).first() is not None
 
     def test_payment_duplicate_rejected(self, logged_in_client, paid_booking):
-        """TC4: Thanh toán 2 lần → 400."""
+        """ Thanh toán 2 lần → 400."""
         booking_obj, _ = paid_booking
         res = self._post(logged_in_client, booking_obj.id, "direct")
         assert res.status_code == 400
         assert json.loads(res.data)["ok"] is False
 
     def test_payment_unauthenticated(self, test_client, confirmed_booking):
-        """TC5: Chưa đăng nhập → 401."""
+        """ Chưa đăng nhập → 401."""
         assert self._post(test_client, confirmed_booking.id).status_code == 401
 
     def test_payment_wrong_user(self, another_logged_in_client, confirmed_booking):
-        """TC6: User khác → ok=False."""
+        """ User khác → ok=False."""
         data = json.loads(self._post(another_logged_in_client, confirmed_booking.id).data)
         assert data["ok"] is False
 
     def test_payment_nonexistent_booking(self, logged_in_client):
-        """TC7: Booking không tồn tại → 404."""
+        """ Booking không tồn tại → 404."""
         assert self._post(logged_in_client, 99999).status_code == 404
 
     def test_payment_bill_amount_correct(self, logged_in_client, confirmed_booking, sample_product):
-        """TC8: Bill amount = giá sân."""
+        """ Bill amount = giá sân."""
         self._post(logged_in_client, confirmed_booking.id, "direct")
         bill = Bill.query.filter_by(booking_id=confirmed_booking.id).first()
         assert bill.amount == sample_product.price
 
     def test_payment_response_has_bill_id(self, logged_in_client, confirmed_booking):
-        """TC9: Response có bill_id kiểu int."""
+        """ Response có bill_id kiểu int."""
         data = json.loads(self._post(logged_in_client, confirmed_booking.id).data)
         assert isinstance(data.get("bill_id"), int)
 
     def test_payment_response_message(self, logged_in_client, confirmed_booking):
-        """TC10: Response có msg hợp lệ."""
+        """ Response có msg hợp lệ."""
         data = json.loads(self._post(logged_in_client, confirmed_booking.id).data)
         assert "msg" in data and len(data["msg"]) > 0
 
@@ -451,4 +451,4 @@ class TestPaymentGroupDuplicate:
         assert res2.status_code == 400
         data = json.loads(res2.data)
         assert data["ok"] is False
-        assert "Đã thanh toán" in data["msg"]
+        assert "Đã thanh toán" in data["msg"]

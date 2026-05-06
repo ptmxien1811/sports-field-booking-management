@@ -60,23 +60,32 @@ class TestBookingToCancelRefund:
         TC3: Sau huỷ, bộ đếm booking trong ngày giảm → cho phép đặt thêm.
         Tích hợp: cancel → count check trong create_booking.
         """
-        slots = ["08:00 - 09:00", "09:00 - 10:00", "10:00 - 11:00"]
-        booked_ids = []
-        for s in slots:
-            b, _ = create_booking(logged_in_user.id, product_with_slots.id, s, future_date)
-            booked_ids.append(b.id)
+        from bookingapp.models import Category, Product
 
-        _, err = create_booking(logged_in_user.id, product_with_slots.id,
-                                 "14:00 - 15:00", future_date)
-        assert err is not None
+        # Tạo thêm 2 sân phụ để đủ 3 sân khác nhau
+        cat = test_session.query(Category).first()
+        product_b = Product(name="Sân Phụ B", price=100000, category_id=cat.id, active=True)
+        product_c = Product(name="Sân Phụ C", price=100000, category_id=cat.id, active=True)
+        product_d = Product(name="Sân Phụ D", price=100000, category_id=cat.id, active=True)
+        test_session.add_all([product_b, product_c, product_d])
+        test_session.commit()
 
-        cancel_booking_by_id(booked_ids[0], logged_in_user.id)
+        # Đặt 3 sân khác nhau → đạt giới hạn
+        b1, _ = create_booking(logged_in_user.id, product_with_slots.id, "08:00 - 09:00", future_date)
+        b2, _ = create_booking(logged_in_user.id, product_b.id, "08:00 - 09:00", future_date)
+        b3, _ = create_booking(logged_in_user.id, product_c.id, "08:00 - 09:00", future_date)
 
-        b_new, err_new = create_booking(logged_in_user.id, product_with_slots.id,
-                                         "14:00 - 15:00", future_date)
-        assert err_new is None
+        # Thử đặt sân thứ 4 (sân D) → phải bị chặn
+        _, err = create_booking(logged_in_user.id, product_d.id, "08:00 - 09:00", future_date)
+        assert err is not None, "Phải bị chặn khi đã đặt 3 sân khác nhau"
+
+        # Hủy sân B
+        cancel_booking_by_id(b2.id, logged_in_user.id)
+
+        # Sau khi hủy → đặt sân D phải thành công
+        b_new, err_new = create_booking(logged_in_user.id, product_d.id, "08:00 - 09:00", future_date)
+        assert err_new is None, f"Phải đặt được sau khi hủy: {err_new}"
         assert b_new.status == "confirmed"
-
     def test_cancel_nonexistent_booking_safe(self, logged_in_client):
         """
         TC4: Huỷ booking không tồn tại → redirect an toàn, không crash.

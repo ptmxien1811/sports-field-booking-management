@@ -7,6 +7,7 @@ import pytest
 from datetime import datetime, timedelta
 
 from bookingapp.models import Booking, Bill
+from bookingapp.models import Category, Product
 from bookingapp.dao import create_booking, cancel_booking_by_id
 
 
@@ -60,7 +61,6 @@ class TestBookingToCancelRefund:
         TC3: Sau huỷ, bộ đếm booking trong ngày giảm → cho phép đặt thêm.
         Tích hợp: cancel → count check trong create_booking.
         """
-        from bookingapp.models import Category, Product
 
         # Tạo thêm 2 sân phụ để đủ 3 sân khác nhau
         cat = test_session.query(Category).first()

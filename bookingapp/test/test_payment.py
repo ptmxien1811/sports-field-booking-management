@@ -8,6 +8,7 @@ import pytest
 import json
 from unittest.mock import MagicMock, PropertyMock
 from datetime import datetime, timedelta
+from bookingapp.models import TimeSlot
 from bookingapp import db
 from bookingapp.models import User, Category, Product, Booking, Bill
 
@@ -44,7 +45,6 @@ def another_logged_in_client(test_client, another_user):
 @pytest.fixture
 def sample_product(test_session, sample_category):
     """Override sample_product: thêm image=test.jpg cho template payment.html."""
-    from bookingapp.models import TimeSlot
     p = Product(
         name="Sân Mini A", price=300_000,
         category_id=sample_category.id,
@@ -374,7 +374,7 @@ class TestPaymentGroupBooking:
     """TC-PAY-GROUP: Kiểm tra trang thanh toán cho nhóm booking."""
 
     def _make_group(self, test_session, user, product, group_id, slots):
-        from bookingapp.models import TimeSlot
+
         tomorrow = datetime.now() + timedelta(days=1)
         day_start = tomorrow.replace(hour=0, minute=0, second=0, microsecond=0)
         bookings = []

@@ -5,6 +5,7 @@ Bao gồm: Unit test model validation, API test routes /register /login
 
 import pytest
 from bookingapp.models import User
+from bookingapp.dao import get_user_by_id
 from bookingapp import db
 from bookingapp.test.test_base import (
     test_app,
@@ -411,13 +412,11 @@ class TestGetUserById:
     """TC-AUTH-GETUSER: Kiểm tra dao.get_user_by_id."""
 
     def test_get_user_by_id_found(self, test_session, logged_in_user):
-        from bookingapp.dao import get_user_by_id
         user = get_user_by_id(logged_in_user.id)
         assert user is not None
         assert user.username == "testuser"
 
     def test_get_user_by_id_not_found(self, test_session):
-        from bookingapp.dao import get_user_by_id
         user = get_user_by_id(99999)
         assert user is None
 

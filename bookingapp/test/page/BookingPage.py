@@ -2,6 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from bookingapp.test.page.BasePage import BasePage
+from selenium.webdriver.support.ui import Select
 
 
 class BookingPage(BasePage):
@@ -32,7 +33,7 @@ class BookingPage(BasePage):
     # ── Actions ──────────────────────────────────────────────────────────
     def select_payment_method(self, method: str = 'direct'):
         """Chọn phương thức thanh toán: 'direct' hoặc 'online'."""
-        from selenium.webdriver.support.ui import Select
+
         select_el = self.wait_visible(*self.PAYMENT_METHOD)
         Select(select_el).select_by_value(method)
 

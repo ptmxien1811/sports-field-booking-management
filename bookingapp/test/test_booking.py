@@ -7,6 +7,7 @@ import pytest
 from bookingapp.models import User, Product, Category, Booking, Bill
 from bookingapp import db
 from bookingapp.dao import create_booking, cancel_booking_by_id
+from bookingapp.dao import get_bookings_by_user
 from datetime import datetime, timedelta
 import sys
 import os
@@ -475,20 +476,17 @@ class TestGetBookingsByUserDAO:
     """TC-BOOK-GETDAO: Kiểm tra dao.get_bookings_by_user."""
 
     def test_get_bookings_returns_confirmed(self, test_session, logged_in_user, confirmed_booking):
-        from bookingapp.dao import get_bookings_by_user
         bookings = get_bookings_by_user(logged_in_user.id)
         assert len(bookings) == 1
         assert bookings[0].status == "confirmed"
 
     def test_get_bookings_excludes_cancelled(self, test_session, logged_in_user, confirmed_booking):
-        from bookingapp.dao import get_bookings_by_user
         confirmed_booking.status = "cancelled"
         test_session.commit()
         bookings = get_bookings_by_user(logged_in_user.id)
         assert len(bookings) == 0
 
     def test_get_bookings_empty_for_new_user(self, test_session, logged_in_user):
-        from bookingapp.dao import get_bookings_by_user
         bookings = get_bookings_by_user(logged_in_user.id)
         assert bookings == []
 

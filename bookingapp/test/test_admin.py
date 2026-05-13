@@ -5,6 +5,10 @@ test_admin.py – Kiểm thử nghiệp vụ Admin
 import pytest
 from bookingapp import db
 from bookingapp.models import Product, Category, Booking, User, Bill, Favorite, TimeSlot
+from bookingapp.admin import ProductView
+from sqlalchemy import func
+from bookingapp.admin import TimeSlotInlineModel
+
 from bookingapp.test.test_base import (
     admin_app,                          # ← fixture có Flask-Admin
     sample_category, sample_product,
@@ -398,7 +402,7 @@ class TestAdminProduct:
 
     def test_delete_model_success(self, test_session, sample_product):
         """ ProductView.delete_model() xóa sân không có future booking → True."""
-        from bookingapp.admin import ProductView
+
         view = ProductView(Product, db.session)
         pid = sample_product.id
         result = view.delete_model(sample_product)
@@ -407,7 +411,7 @@ class TestAdminProduct:
 
     def test_delete_model_blocked(self, test_session, test_app, product_with_future_booking):
         """ ProductView.delete_model() sân có future booking → False."""
-        from bookingapp.admin import ProductView
+
         view = ProductView(Product, db.session)
         pid = product_with_future_booking.id
         with test_app.test_request_context():   # ← dùng test_app thay vì _app
@@ -460,13 +464,11 @@ class TestAdminBill:
 
     def test_bill_count(self, test_session, sample_bill):
         """ Đếm tổng bill chính xác."""
-        from sqlalchemy import func
         count = test_session.query(func.count(Bill.id)).scalar()
         assert count >= 1
 
     def test_total_revenue(self, test_session, sample_bill):
         """ Tổng doanh thu tính đúng."""
-        from sqlalchemy import func
         total = test_session.query(func.sum(Bill.amount)).scalar()
         assert total >= sample_bill.amount
 
@@ -524,7 +526,6 @@ class TestTimeSlotPeriod:
 
     def test_on_model_change_morning(self, test_session, sample_product):
         """ on_model_change gán period=morning cho giờ sáng."""
-        from bookingapp.admin import TimeSlotInlineModel
         ts = TimeSlot(product_id=sample_product.id, label="08:00 - 09:00")
         inline = TimeSlotInlineModel(TimeSlot)
         inline.on_model_change(form=None, model=ts, is_created=True)
@@ -532,7 +533,6 @@ class TestTimeSlotPeriod:
 
     def test_on_model_change_afternoon(self, test_session, sample_product):
         """ on_model_change gán period=afternoon cho giờ chiều."""
-        from bookingapp.admin import TimeSlotInlineModel
         ts = TimeSlot(product_id=sample_product.id, label="15:00 - 16:00")
         inline = TimeSlotInlineModel(TimeSlot)
         inline.on_model_change(form=None, model=ts, is_created=True)
@@ -540,7 +540,6 @@ class TestTimeSlotPeriod:
 
     def test_on_model_change_evening(self, test_session, sample_product):
         """ on_model_change gán period=evening cho giờ tối."""
-        from bookingapp.admin import TimeSlotInlineModel
         ts = TimeSlot(product_id=sample_product.id, label="20:00 - 21:00")
         inline = TimeSlotInlineModel(TimeSlot)
         inline.on_model_change(form=None, model=ts, is_created=True)
@@ -590,7 +589,6 @@ class TestDeleteModelException:
     def test_delete_model_exception_returns_false(self, test_session, test_app,
                                                     sample_product, mocker):
         """ session.delete ném exception → flash lỗi, rollback, return False."""
-        from bookingapp.admin import ProductView
         view = ProductView(Product, db.session)
         pid = sample_product.id
         mocker.patch.object(view.session, "delete",

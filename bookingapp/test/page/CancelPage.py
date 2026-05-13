@@ -1,5 +1,7 @@
 from selenium.webdriver.common.by import By
 from bookingapp.test.page.BasePage import BasePage
+import time as _time
+from selenium.common.exceptions import NoAlertPresentException
 
 
 class CancelPage(BasePage):
@@ -39,8 +41,7 @@ class CancelPage(BasePage):
 
     def _accept_alert_if_present(self, timeout=3):
         """Accept browser confirm/alert dialog if one appears."""
-        import time as _time
-        from selenium.common.exceptions import NoAlertPresentException
+
         _time.sleep(1)
         try:
             alert = self.driver.switch_to.alert
